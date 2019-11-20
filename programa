@@ -1,5 +1,6 @@
-LD A, DE         ; Leemos un dato de [DE]
+LD A, DE         
 ADD A,valor       ; Le sumamos 1 al dato leído
 LD (HL), A         ; Lo grabamos en el destino [HL]
 INC DE             ; Apuntamos al siguiente dato
 INC HL
+Hola 
