@@ -5,6 +5,8 @@
  */
 package macroe;
 
+import java.util.ArrayList;
+
 /**
  *
  * @author alacr
@@ -15,7 +17,13 @@ public class MacroE {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
+        String bin = "01rs";
+        ArrayList <String> variables = new ArrayList <> ();
+        variables.add("111");
+        variables.add("00000100");
+        
+        
+        
     }
     
 }
