@@ -26,7 +26,7 @@ public class Z80 {
     Hashtable<String,String> t=new Hashtable<>();
     
     ArrayList<String> setMne = new ArrayList<>();
-    ArrayList<String> setArg = new ArrayList<>();
+    ArrayList<ArrayList> setArg = new ArrayList<>();
     ArrayList<String> bin = new ArrayList<>();
     
     String mne = "";
@@ -50,24 +50,32 @@ public class Z80 {
     int more = 0;
     public Z80(){
         info();
+        System.out.println(setArg);
         init();
     }
         
     public void info(){  
         try{
+                
                 File f;
                 f = new File("mnemonicos");
                 Scanner input = new Scanner(f);
                 while (input.hasNextLine()) {
+                    ArrayList<String> x = new ArrayList<>();
                     String line = input.nextLine();
                     String aux = line.substring(0,line.indexOf(":"));
                     if(aux.contains(" ") ){
-                        setMne.add(aux.substring(0,aux.indexOf(" ")));
-                        setArg.add(aux.substring(aux.indexOf(" ")));
-                    }else{
+                        setMne.add(aux.substring(0,aux.indexOf(" ")).replace(" ", ""));
+                        aux = aux.substring(aux.indexOf(" ")).replace(" ", "");
+                        if(aux.contains(",")){
+                            x.add(aux.substring(0,aux.indexOf(",")));
+                            x.add(aux.substring(aux.indexOf(",")+1));
+                        }else
+                            x.add(aux);
+                    }else
                         setMne.add(aux);
-                        setArg.add(" ");
-                    }
+                    
+                    setArg.add(x);
                     aux = line.substring(line.indexOf(":")+1);
                     bin.add(aux);
                 }
@@ -107,6 +115,7 @@ public class Z80 {
                     if((!(line.contains(" ")) && i == 1) || (line.replace(" ", "").equals(aux))){
                         //Se envía el metodo de amadeus
                         finish = bin.get(x-1);
+                        System.out.println(" Finish->" + finish);
                         continue;
                     }
                     aux = line.substring(line.indexOf(" ")).replace(" ","");
@@ -120,8 +129,6 @@ public class Z80 {
                     changeComand();
                     
                     
-                    System.out.println(mne);
-                    System.out.println(table);
                 }
                 input.close();
         }catch(IOException e){
@@ -129,7 +136,7 @@ public class Z80 {
         }
     }
     
-    /*Se busca el comando en el arreglo*/
+    /*Se busca el comando en el arreglo total*/
     public int searchCom (String comand){
         i = 0;
         x = 0;
@@ -171,15 +178,62 @@ public class Z80 {
     
     public void changeComand(){
         i = x -i;
-        x--;
         
+        String a, b, c, d;
+        System.out.println(table);
+        for (int j = 0; j < table.get(0).size(); j++) {
+            for (int l = i; l < x; l++) {
+                a = (String) setArg.get(l).get(0);
+                b = (String) table.get(0).get(j);
+                if(a.equals(b) && table.size() > 1){
+                    for (int m = 0; m < table.get(1).size(); m++) {                        
+                        for (int n = l; n < x; n++) {
+                            if(b.equals((String) setArg.get(n).get(0))){
+                                c = (String) setArg.get(n).get(1);
+                                d = (String) table.get(1).get(m);
+                                if(c.equals(d)){
+                                    System.out.println("Coincidencia " + n);
+                                    System.out.println(setArg.get(n));
+                                    System.out.println(a + " - " + b + " - " + c + " - " + d);
+                                    ArrayList<String> end = new ArrayList<>();
+                                    end.add(a);
+                                    end.add(c);
+                                    System.out.println(bin.get(n));
+                                    System.out.println(end);
+//                                    archivo(bin.get(n), end);
+                                    n = x-1;
+                                    m = table.get(1).size()-1;
+                                    l = x-1;
+                                    j = table.get(0).size()-1;
+                                }
+                            }else{
+                                n = x-1;
+                            }
+                        }
+                    }
+                }else if (table.size() == 1){
+                    ArrayList<String> end = new ArrayList<>();
+                    end.add(a);
+                    System.out.println(bin.get(l));
+                    System.out.println(end);
+//                archivo(bin.get(n), end);
+                    l = x-1;
+                    j = table.get(0).size()-1;
+                }
+            }
+        }        
     }
     
     /*Se busca en las tablas si existen los registros*/
     public int searchTables (String argu){
         String flag = "N"; 
+        brackets = "N";
+        
         ArrayList<String> args = new ArrayList<>();
         if(argu.length() == 1){
+            if(argu.equals("A"))
+                args.add("A");
+            
             Enumeration<String> e = r.keys();
             while(e.hasMoreElements()){
                 String a = e.nextElement();
@@ -204,17 +258,28 @@ public class Z80 {
             }
             
         }else if (argu.length() > 1){
+            
             if(argu.contains("(")){
                 brackets = "Y";
-                argu = argu.substring(argument.indexOf("(")+1, argument.indexOf(")"));
+                args.add(argu);
+                argu = argu.replace("(", "");
+                argu = argu.replace(")", "");
             }
-            
+            else if(argu.contains("IX+"))
+                args.add("(IX+d)");
+            else if(argu.contains("IY+"))
+                args.add("(IY+d)");
+            else
+                args.add(argu);
             Enumeration<String> e = dd.keys();
             while(e.hasMoreElements()){
                 String a = e.nextElement();
                 if (argu.equals(a)){
                     firstBin = dd.get(a);
-                    args.add("dd");
+                    if(brackets.equals("Y"))
+                        args.add("(dd)");
+                    else
+                        args.add("dd");
                     flag = "y";
                     break;
                 }
@@ -224,7 +289,10 @@ public class Z80 {
                 String a = z.nextElement();
                 if (argu.equals(a)){
                     firstBin = qq.get(a);
-                    args.add("qq");
+                    if(brackets.equals("Y"))
+                        args.add("(qq)");
+                    else
+                        args.add("qq");
                     flag = "y";
                     break;
                 }
@@ -234,7 +302,10 @@ public class Z80 {
                 String a = x.nextElement();
                 if (argu.equals(a)){
                     firstBin = rr.get(a);
-                    args.add("rr");
+                    if(brackets.equals("Y"))
+                        args.add("(rr)");
+                    else
+                        args.add("rr");
                     flag = "y";
                     break;
                 }
@@ -246,6 +317,9 @@ public class Z80 {
                 String a = e.nextElement();
                     if (argu.equals(a)){
                         firstBin = cc.get(a);
+                        if(brackets.equals("Y"))
+                        args.add("(cc)");
+                    else
                         args.add("cc");
                         flag = "y";
                         break;
@@ -256,6 +330,7 @@ public class Z80 {
             }
               
         }
+        
         table.add(args);
         return 1;
     }
