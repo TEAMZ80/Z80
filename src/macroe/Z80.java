@@ -31,6 +31,9 @@ public class Z80 {
     String mne = "";
     String argument = "";
     
+    private String HEX;
+    private String LST;
+    
     String firstBin = "";
     String secondBin = "";
     ArrayList<String> table = new ArrayList<>();
@@ -248,6 +251,29 @@ public class Z80 {
         cc.put("PE", "101");
         cc.put("P", "110");
         cc.put("M", "111");
+    }
+    
+    public void archivo(String bin, ArrayList variables){
+        if ( variables.isEmpty() ){
+            for (int i = 0; i < bin.length(); i++) {
+                Character letra = bin.charAt(i);
+                System.out.println("ESC: " + letra);
+                if( letra != '0' && letra != '1'){
+                    System.out.print("  cambio: " + letra + "\n");
+                    bin = bin.replaceFirst(letra.toString(), (String) variables.remove(0));
+                    i++;
+                }
+            }
+        }
+        agregar(bin);
+        
+    }
+    
+        private void agregar(String COM){
+        this.HEX.concat(COM + "\n");   //AQui transformamos y agregamos a cada archivo.
+        int aux = Integer.parseInt(COM, 10);
+        COM = Integer.toHexString(aux);
+        this.LST.concat(COM + "\n");
     }
 
 }
