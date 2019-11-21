@@ -411,4 +411,14 @@ public class Z80 {
         this.LST.concat(COM + "\n");
     }
 
+    public String getHEX() {
+        return HEX;
+    }
+
+    public String getLST() {
+        return LST;
+    }
+        
+        
+
 }
