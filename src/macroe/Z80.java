@@ -23,6 +23,7 @@ public class Z80 {
     Hashtable<String,String> rr=new Hashtable<>();
     Hashtable<String,String> b=new Hashtable<>();
     Hashtable<String,String> cc=new Hashtable<>();
+    Hashtable<String,String> t=new Hashtable<>();
     
     ArrayList<String> setMne = new ArrayList<>();
     ArrayList<String> setArg = new ArrayList<>();
@@ -251,6 +252,16 @@ public class Z80 {
         cc.put("PE", "101");
         cc.put("P", "110");
         cc.put("M", "111");
+        
+        t.put("000", "00H");
+        t.put("001", "08H");
+        t.put("010", "10H");
+        t.put("011", "18H");
+        t.put("100", "20H");
+        t.put("101", "28H");
+        t.put("110", "30H");
+        t.put("111", "38H");
+        
     }
     
     public void archivo(String bin, ArrayList variables){
