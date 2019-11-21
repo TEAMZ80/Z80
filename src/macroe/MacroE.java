@@ -21,14 +21,10 @@ public class MacroE {
         Z80 x = new Z80();
         x.read("programa");
 
-        // TODO code application logic here
-
-        String bin = "01rs";
         ArrayList <String> variables = new ArrayList <> ();
         variables.add("111");
         variables.add("00000100");
-        
-        
+
     }
     
 }

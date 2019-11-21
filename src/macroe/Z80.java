@@ -37,15 +37,20 @@ public class Z80 {
     
     String firstBin = "";
     String secondBin = "";
-    ArrayList<String> table = new ArrayList<>();
+    ArrayList<ArrayList> table = new ArrayList<>();
     String brackets = "N";
+    
+    String first;
+    String second;
+    
+    String finish;
     
     int i = 0;
     int x = 0;
+    int more = 0;
     public Z80(){
         info();
         init();
-        System.out.println(r);
     }
         
     public void info(){  
@@ -56,8 +61,13 @@ public class Z80 {
                 while (input.hasNextLine()) {
                     String line = input.nextLine();
                     String aux = line.substring(0,line.indexOf(":"));
-                    setMne.add(aux.substring(0,aux.indexOf(" ")));
-                    setArg.add(aux.substring(aux.indexOf(" ")));
+                    if(aux.contains(" ") ){
+                        setMne.add(aux.substring(0,aux.indexOf(" ")));
+                        setArg.add(aux.substring(aux.indexOf(" ")));
+                    }else{
+                        setMne.add(aux);
+                        setArg.add(" ");
+                    }
                     aux = line.substring(line.indexOf(":")+1);
                     bin.add(aux);
                 }
@@ -78,19 +88,39 @@ public class Z80 {
                 
                 while (input.hasNextLine()) {
                     line = input.nextLine();
+                    if (line.contains(";")){
+                        line = line.substring(0, line.indexOf(";"));
+                    }
+                    if(line.contains(" ")){
+                        aux = line.substring(0, line.indexOf(" "));
+                    }
+                    else
+                        aux = line;
                     
-                    aux = line.substring(0,line.indexOf(" "));
                     mne = aux;
-                    if(search(aux) == -1){
+                    more = searchCom(aux);
+                    if(more == -1){
                         //Se envia un error
                         System.out.println("ERROR");
+                        return;
+                    }
+                    if((!(line.contains(" ")) && i == 1) || (line.replace(" ", "").equals(aux))){
+                        //Se envía el metodo de amadeus
+                        finish = bin.get(x-1);
+                        continue;
                     }
                     aux = line.substring(line.indexOf(" ")).replace(" ","");
                     aux = aux.contains(";") ? aux.substring(0,aux.indexOf(";")) : aux;
                     argument = aux;
                     table.clear();
                     
-                    change();
+                    if(argument.length() > 0){
+                        changeArgs();
+                    }
+                    changeComand();
+                    
+                    
+                    System.out.println(mne);
                     System.out.println(table);
                 }
                 input.close();
@@ -100,8 +130,9 @@ public class Z80 {
     }
     
     /*Se busca el comando en el arreglo*/
-    public int search (String comand){
+    public int searchCom (String comand){
         i = 0;
+        x = 0;
         for (String c : setMne){
             if(c.equals(comand)){
                 i++;
@@ -118,27 +149,43 @@ public class Z80 {
     }
     
     /*Se transforma a binario*/
-    public void change(){
-        String first = "";
-        String second = "";
-        
+    public void changeArgs(){
+        int flag;
         if (argument.contains(",")){
             first = argument.substring(0, argument.indexOf(","));
             second = argument.substring(argument.indexOf(",")+1).replace(" ", "");
+            flag = searchTables(first);
+            if(flag == -1)
+                System.out.println("Error: Mal argumentos");
+            flag = searchTables(second);
+            if(flag == -1)
+                System.out.println("Error: Mal argumentos");
         }else{
             first = argument;
-            second = "";
+            flag = searchTables(first);
+            if(flag == -1)
+                System.out.println("Error: Mal argumentos");
         }
-        String flag = "N";
         
-        if(first.length() == 1){
-            
+    }
+    
+    public void changeComand(){
+        i = x -i;
+        x--;
+        
+    }
+    
+    /*Se busca en las tablas si existen los registros*/
+    public int searchTables (String argu){
+        String flag = "N"; 
+        ArrayList<String> args = new ArrayList<>();
+        if(argu.length() == 1){
             Enumeration<String> e = r.keys();
             while(e.hasMoreElements()){
                 String a = e.nextElement();
-                if (first.equals(a)){
+                if (argu.equals(a)){
                     firstBin = r.get(a);
-                    table.add("r");
+                    args.add("r");
                     flag = "y";
                     break;
                 }
@@ -147,27 +194,27 @@ public class Z80 {
                 Enumeration<String> z = b.keys();
                 while(e.hasMoreElements()){
                     String a = z.nextElement();
-                    if(first.equals(a)){  
+                    if(argu.equals(a)){  
                         firstBin = b.get(a);
-                        table.add("b");
+                        args.add("b");
                         flag = "y";
                         break;
                     }
                 }
             }
             
-        }else if (first.length() > 1){
-            if(first.contains("(")){
+        }else if (argu.length() > 1){
+            if(argu.contains("(")){
                 brackets = "Y";
-                first = first.substring(argument.indexOf("(")+1, argument.indexOf(")"));
+                argu = argu.substring(argument.indexOf("(")+1, argument.indexOf(")"));
             }
             
             Enumeration<String> e = dd.keys();
             while(e.hasMoreElements()){
                 String a = e.nextElement();
-                if (first.equals(a)){
+                if (argu.equals(a)){
                     firstBin = dd.get(a);
-                    table.add("dd");
+                    args.add("dd");
                     flag = "y";
                     break;
                 }
@@ -175,9 +222,9 @@ public class Z80 {
             Enumeration<String> z = qq.keys();
             while(z.hasMoreElements()){
                 String a = z.nextElement();
-                if (first.equals(a)){
+                if (argu.equals(a)){
                     firstBin = qq.get(a);
-                    table.add("qq");
+                    args.add("qq");
                     flag = "y";
                     break;
                 }
@@ -185,9 +232,9 @@ public class Z80 {
             Enumeration<String> x = rr.keys();
             while(x.hasMoreElements()){
                 String a = x.nextElement();
-                if (first.equals(a)){
+                if (argu.equals(a)){
                     firstBin = rr.get(a);
-                    table.add("rr");
+                    args.add("rr");
                     flag = "y";
                     break;
                 }
@@ -197,18 +244,20 @@ public class Z80 {
             Enumeration<String> e = cc.keys();
             while(e.hasMoreElements()){
                 String a = e.nextElement();
-                    if (first.equals(a)){
+                    if (argu.equals(a)){
                         firstBin = cc.get(a);
-                        table.add("cc");
+                        args.add("cc");
                         flag = "y";
                         break;
                     }
             }
             if(flag.equals("N")){
-                System.out.println("Error: Argumento mal");
+                return -1;
             }
               
-        }  
+        }
+        table.add(args);
+        return 1;
     }
     
     public void init(){
