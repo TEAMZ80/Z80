@@ -1,0 +1,1 @@
+	LD A, 2	LD C, A	PUSH HL	LD L, B	LD H, C	LD A, 5	LD E, A	PUSH HL	LD L, B	LD H, C	END
