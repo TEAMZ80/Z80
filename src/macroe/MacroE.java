@@ -5,6 +5,7 @@
  */
 package macroe;
 
+import panta.Z80;
 import java.util.ArrayList;
 
 /**
