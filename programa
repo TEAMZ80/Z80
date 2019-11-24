@@ -1,9 +1,0 @@
-LD A, D         
-ADD A,(HL)       ; Le sumamos 1 al dato leído
-LD (HL), A         ; Lo grabamos en el destino [HL]
-INC                ; Apuntamos al siguiente dato
-INC
-PUSH BC
-LD A, DE         
-ADD A,HL       ; Le sumamos 1 al dato leído
-LD (HL), A
