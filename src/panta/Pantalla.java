@@ -84,6 +84,11 @@ public class Pantalla extends javax.swing.JFrame {
                 macroItemStateChanged(evt);
             }
         });
+        macro.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                macroStateChanged(evt);
+            }
+        });
         macro.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 macroActionPerformed(evt);
@@ -93,16 +98,27 @@ public class Pantalla extends javax.swing.JFrame {
         tabladesimbolos.setBackground(new java.awt.Color(255, 255, 255));
         tabladesimbolos.setSelected(true);
         tabladesimbolos.setText("TABLA DE SIMBOLOS");
+        tabladesimbolos.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                tabladesimbolosStateChanged(evt);
+            }
+        });
 
         codigoobjeto.setBackground(new java.awt.Color(255, 255, 255));
         codigoobjeto.setSelected(true);
         codigoobjeto.setText("CODIGO OBJETO");
+        codigoobjeto.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                codigoobjetoStateChanged(evt);
+            }
+        });
 
         Salida.setForeground(new java.awt.Color(204, 204, 204));
 
         Carga.setText("PREPARANDO....");
 
         btnaceptar.setText("OK!");
+        btnaceptar.setEnabled(false);
         btnaceptar.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 btnaceptarMouseClicked(evt);
@@ -213,7 +229,6 @@ public class Pantalla extends javax.swing.JFrame {
         if (archivo != null) {
             ruta.setText(archivo.getAbsolutePath());
         }
-        btnaceptar.enable();
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void macroItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_macroItemStateChanged
@@ -236,6 +251,24 @@ public class Pantalla extends javax.swing.JFrame {
         this.Carga.setText("CARGANDO...");
         procesar();
     }//GEN-LAST:event_btnaceptarMouseClicked
+
+    private void macroStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_macroStateChanged
+        // TODO add your handling code here:
+        this.mac = this.macro.isSelected();
+        verificar();
+    }//GEN-LAST:event_macroStateChanged
+
+    private void tabladesimbolosStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_tabladesimbolosStateChanged
+        // TODO add your handling code here:
+        this.lst = this.tabladesimbolos.isSelected();
+        verificar();
+    }//GEN-LAST:event_tabladesimbolosStateChanged
+
+    private void codigoobjetoStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_codigoobjetoStateChanged
+        // TODO add your handling code here:
+        this.hex = this.codigoobjeto.isSelected();
+        verificar();
+    }//GEN-LAST:event_codigoobjetoStateChanged
   
     void procesar() {
         
@@ -268,22 +301,19 @@ public class Pantalla extends javax.swing.JFrame {
         if (lst) {
             files.Archivo(en.getLST(), ".LST");
         }
-        
-        
-        //AQUI SE ENSAMBLA Y EN CASO DE QUE NO SE PUEDA YA ESTA EL ERROR
-        
-        
         if ( false ) {
             this.Carga.setText("ERROR AL ENSAMBLAR"); 
         }
-        /*for (int i = 0; i < macro.numMacrodefiniciones; i++) {
-        System.out.println(macro.macrodefiniciones.get(i).nombre);
-        System.out.println(macro.macrodefiniciones.get(i).parametros.toString());
-        //System.out.println(macro.macrodefiniciones.get(i).lineas.get(macro.macrodefiniciones.get(i).lineas.size()-1));
-        }*/
 
     }
-
+    
+    public void verificar(){
+        if ( !this.hex && !this.lst && !this.mac || this.ruta.getText().isEmpty() ){
+            this.btnaceptar.setEnabled(false);
+        } else {
+            this.btnaceptar.setEnabled(true);
+        }
+    }
     /**
      * @param args the command line arguments
      */
