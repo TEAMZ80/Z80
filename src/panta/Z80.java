@@ -95,7 +95,8 @@ public class Z80 {
         
         if (file.lineas.get(0).toUpperCase().contains("ORG")) {
             aux2 = file.getLinea().toUpperCase();
-            aux2 = aux2.substring(aux2.indexOf("G")+1);
+            aux2 = aux2.substring(aux2.indexOf("G")+1).trim();
+            System.out.println(aux2);
             this.CL = Long.parseLong(aux2, 16);
             
         }
@@ -155,14 +156,17 @@ public class Z80 {
         }
         
         String auxHEX = "";
-        ArrayList<Long> llaves = new ArrayList<> (this.LST.keySet());
-        
-        int casi = llaves.size()-1;
         String con = "";
-        while ( casi != -1 ){
-            aux = llaves.remove(casi);
-            bin = LST.get(aux);
-            con = Long.toHexString(aux).toUpperCase();
+        Long casi = 0L;
+        
+        while ( !LST.isEmpty() ){
+            System.out.println(LST.size() + " -- " + casi);
+            if ( !LST.containsKey(casi) ){
+                casi ++;
+                continue;
+            }
+            bin = LST.remove(casi);
+            con = Long.toHexString(casi).toUpperCase();
             auxHEX = auxHEX + bin;
             while ( con.length()%4 != 0 ){
                 con = "0"+con;
@@ -170,13 +174,13 @@ public class Z80 {
             while( bin.length()%8 != 0){
                 bin = bin+ " ";
             }
-            this.LSTT.add(con + "\t->\t" + bin + "\t\t->\t\t" + this.HEX.remove(aux));
+            this.LSTT.add(con + "\t->\t" + bin + "\t\t->\t\t" + this.HEX.remove(casi));
             
             if ( auxHEX.length() >= 42 ){
                 this.HEXT.add(":" + auxHEX.substring(0,42));
                 auxHEX = auxHEX.substring(42);
             }
-            casi--;
+            casi++;
         }
         this.LSTT.add("\n ------------------------------------------------------- \n");
         ArrayList<String> llaves2 = new ArrayList<> (this.ETIQUETAS.keySet());
