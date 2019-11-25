@@ -20,7 +20,6 @@ public class Archivo {
     }
 
     public boolean Archivo(ArrayList<String> listo, String end) {
-        
         ArrayList <String> salida = new ArrayList <> ();
         salida = (ArrayList<String>) listo.clone();
         
@@ -37,13 +36,11 @@ public class Archivo {
             lineas.addAll(salida);
             return true;
         } catch ( IOException e ){
-            System.out.println("Error al crear el archivo");
             return false;
         }
     }
 
     public boolean leerArchivo() {
-        String texto = "";
         try {
             BufferedReader br;
             FileReader fr = new FileReader(ruta);
@@ -55,7 +52,6 @@ public class Archivo {
             }
             br.close();
         } catch (IOException ioe) {
-            System.out.println("\nError al abrir o guardar archivo");
         }
         return true;
     }
@@ -75,7 +71,7 @@ public class Archivo {
     }
     
     public void preparar() {
-        ArrayList<String> emsamblar = new ArrayList<> ();
+         ArrayList<String> emsamblar = new ArrayList<> ();
         for ( String line : lineas ){
             //COMENTARIOS
             if ( line.contains(";")) {

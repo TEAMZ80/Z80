@@ -85,9 +85,9 @@ public class Z80 {
     
     //Lee un archivo y lo traduce, esta es la primera pasada
     public String procesar (Archivo file) {
-        if ( file.lineas.isEmpty() || !file.lineas.get(0).equals("CPU:Z80")  ) {
+        /*if ( file.lineas.isEmpty() || !file.lineas.get(0).equals("CPU:Z80")  ) {
             return "ERROR: ARCHIVO NO VALIDO";
-        }
+        }*/
         
         
         String PC = "", SC = "", comm = "", aux ="", aux2 = "";
@@ -96,7 +96,6 @@ public class Z80 {
         if (file.lineas.get(0).toUpperCase().contains("ORG")) {
             aux2 = file.getLinea().toUpperCase();
             aux2 = aux2.substring(aux2.indexOf("G")+1).trim();
-            System.out.println(aux2);
             this.CL = Long.parseLong(aux2, 16);
             
         }
@@ -160,7 +159,6 @@ public class Z80 {
         Long casi = 0L;
         
         while ( !LST.isEmpty() ){
-            System.out.println(LST.size() + " -- " + casi);
             if ( !LST.containsKey(casi) ){
                 casi ++;
                 continue;

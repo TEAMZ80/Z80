@@ -199,9 +199,9 @@ public class Pantalla extends javax.swing.JFrame {
                 .addGap(18, 18, 18)
                 .addComponent(jLabel3)
                 .addGap(18, 18, 18)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(ruta, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton2))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jButton2, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(ruta, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(26, 26, 26)
@@ -300,8 +300,9 @@ public class Pantalla extends javax.swing.JFrame {
         }
         Macroensamblador macro = new Macroensamblador(files.lineas);
         String out = macro.macroensamblar();
+        
         if (mac){
-            if ( out == "LISTO!"){
+            if ( "LISTO!".equals(out)){
                 this.Carga.setText("GUARDANDO..!");
                 if ( this.files.Archivo(macro.lineas, "M.ASM") ){
                     this.Carga.setText("GUARDADA!");  
@@ -312,10 +313,14 @@ public class Pantalla extends javax.swing.JFrame {
                 this.Carga.setText(out);
             }
         }
+        
         files.preparar();
         Z80 en = new Z80();
         boolean ban = false;
-        if (en.procesar(files).equals("LISTO!")){
+        
+        String salida = en.procesar(files);
+        
+        if (salida.equals("LISTO!")){
             ban = true;
         }
         if ( hex && ban){
@@ -337,7 +342,8 @@ public class Pantalla extends javax.swing.JFrame {
             this.Carga.setText("ERROR AL ENSAMBLAR");
         }
 
-        
+        this.ruta.setText("");
+        this.btnaceptar.setEnabled(false);
     }
     
     public void verificar(){
