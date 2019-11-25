@@ -26,6 +26,7 @@ public class Z80 {
     private Hashtable<String, String> VAR;
     private Hashtable<String, String> COD;
 
+    //Metodo contructor
     public Z80() {
         this.ETIQUETAS = new Hashtable<>();
         this.COD = new Hashtable<>();

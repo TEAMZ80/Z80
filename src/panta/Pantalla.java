@@ -344,7 +344,10 @@ public class Pantalla extends javax.swing.JFrame {
         if ( !this.hex && !this.lst && !this.mac || this.ruta.getText().isEmpty() ){
             this.btnaceptar.setEnabled(false);
         } else {
-            this.btnaceptar.setEnabled(true);
+            archivo = new File(ruta.getText());
+            if ( archivo.exists() ){
+                this.btnaceptar.setEnabled(true);
+            }
         }
     }
     /**
