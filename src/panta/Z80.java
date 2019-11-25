@@ -5,452 +5,606 @@
  */
 package panta;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.Scanner;
 
 /**
  *
- * @author BetoNajera
+ * @author alacr
  */
 public class Z80 {
-    Hashtable<String,String> dd=new Hashtable<>();
-    Hashtable<String,String> qq=new Hashtable<>();
-    Hashtable<String,String> r=new Hashtable<>();
-    Hashtable<String,String> rr=new Hashtable<>();
-    Hashtable<String,String> b=new Hashtable<>();
-    Hashtable<String,String> cc=new Hashtable<>();
-    Hashtable<String,String> t=new Hashtable<>();
-    
-    ArrayList<String> setMne = new ArrayList<>();
-    ArrayList<ArrayList> setArg = new ArrayList<>();
-    ArrayList<String> bin = new ArrayList<>();
-    
-    String mne = "";
-    String argument = "";
-    
-    int CL;
-    private String HEX;
-    private String LST;
-    private Hashtable<String, Integer> ETIQUETAS;
-    
-    
-    String firstBin = "";
-    String secondBin = "";
-    ArrayList<ArrayList> table = new ArrayList<>();
-    String brackets = "N";
-    
-    String first;
-    String second;
-    
-    String finish;
-    
-    int i = 0;
-    int x = 0;
-    int more = 0;
-    
-    public Z80(){
-        
-        this.CL = 0;
-        this.ETIQUETAS = new Hashtable <> ();
-        this.HEX = "";
-        this.LST = "";
-        
-        //info();
-        System.out.println(setArg);
-        //init();
+
+    private Long CL;
+    private ArrayList<String> HEX;
+    private String AUXHEX;
+    private ArrayList<String> LST;
+    private Hashtable<String, Long> ETIQUETAS;
+    private ArrayList<Integer> PENDIENTE;
+    private Hashtable<String, String> VAR;
+    private Hashtable<String, String> COD;
+
+    public Z80() {
+        this.ETIQUETAS = new Hashtable<>();
+        this.COD = new Hashtable<>();
+        this.VAR = new Hashtable <> ();
+        this.HEX = new ArrayList<>();
+        this.LST = new ArrayList<>();
+        this.PENDIENTE = new ArrayList<>();
+        this.CL = 0L;
+        this.AUXHEX = "";
+        inicializar();
     }
-        
-    public void info(){  
-        try{
-                
-                File f;
-                f = new File("mnemonicos");
-                Scanner input = new Scanner(f);
-                while (input.hasNextLine()) {
-                    ArrayList<String> x = new ArrayList<>();
-                    String line = input.nextLine();
-                    String aux = line.substring(0,line.indexOf(":"));
-                    if(aux.contains(" ") ){
-                        setMne.add(aux.substring(0,aux.indexOf(" ")).replace(" ", ""));
-                        aux = aux.substring(aux.indexOf(" ")).replace(" ", "");
-                        if(aux.contains(",")){
-                            x.add(aux.substring(0,aux.indexOf(",")));
-                            x.add(aux.substring(aux.indexOf(",")+1));
-                        }else
-                            x.add(aux);
-                    }else
-                        setMne.add(aux);
-                    
-                    setArg.add(x);
-                    aux = line.substring(line.indexOf(":")+1);
-                    bin.add(aux);
-                }
-                input.close();
-        }catch(IOException e){
-            System.out.println("Error");
+    
+    private void inicializar(){
+        VAR.put( "A" , "111" );
+        VAR.put( "L" , "101" );
+        VAR.put( "H" , "100" );
+        VAR.put( "E" , "011" );
+        VAR.put( "D" , "010" );
+        VAR.put( "C" , "001" );
+        VAR.put( "B" , "000" );
+        VAR.put( "SP" , "11" );
+        VAR.put( "HL" , "10" );
+        VAR.put( "DE" , "01" );
+        VAR.put( "BC" , "00" );
+        VAR.put( "AF" , "11" );
+        VAR.put( "38H" , "111" );
+        VAR.put( "30H" , "110" );
+        VAR.put( "28H" , "101" );
+        VAR.put( "20H" , "100" );
+        VAR.put( "18H" , "011" );
+        VAR.put( "10H" , "010" );
+        VAR.put( "08H" , "001" );
+        VAR.put( "00H" , "000" );
+        COD.put( "M" , "111" );
+        COD.put( "P" , "110" );
+        COD.put( "PE" , "101" );
+        COD.put( "PO" , "100" );
+        COD.put( "C" , "011" );
+        COD.put( "NC" , "010" );
+        COD.put( "Z" , "001" );
+        COD.put( "NZ" , "000" );
+        VAR.put( "7" , "111" );
+        VAR.put( "6" , "110" );
+        VAR.put( "5" , "101" );
+        VAR.put( "4" , "100" );
+        VAR.put( "3" , "011" );
+        VAR.put( "2" , "010" );
+        VAR.put( "1" , "001" );
+        VAR.put( "0" , "000" );
+        VAR.put( "IY" , "10" );
+        VAR.put( "IX" , "10" );
+    }
+    
+    public String procesar (Archivo file) {
+        if ( file.lineas.isEmpty() || !file.lineas.get(0).equals("CPU:Z80")  ) {
+            System.out.println("NO PASO :D");
+            return "ERROR: ARCHIVO NO VALIDO";
         }
-    }
-    
-    /*Se leen los comando y se divide en comando y argumentos*/
-    public void read (String name){
-        String aux;
-        String line;
-        try{
-                File f;
-                f = new File(name);
-                Scanner input = new Scanner(f);
-                
-                while (input.hasNextLine()) {
-                    line = input.nextLine();
-                    if (line.contains(";")){
-                        line = line.substring(0, line.indexOf(";"));
-                    }
-                    if(line.contains(" ")){
-                        aux = line.substring(0, line.indexOf(" "));
-                    }
-                    else
-                        aux = line;
-                    
-                    mne = aux;
-                    more = searchCom(aux);
-                    if(more == -1){
-                        //Se envia un error
-                        System.out.println("ERROR");
-                        return;
-                    }
-                    if((!(line.contains(" ")) && i == 1) || (line.replace(" ", "").equals(aux))){
-                        //Se envía el metodo de amadeus
-                        finish = bin.get(x-1);
-                        System.out.println(" Finish->" + finish);
-                        continue;
-                    }
-                    aux = line.substring(line.indexOf(" ")).replace(" ","");
-                    aux = aux.contains(";") ? aux.substring(0,aux.indexOf(";")) : aux;
-                    argument = aux;
-                    table.clear();
-                    
-                    if(argument.length() > 0){
-                        changeArgs();
-                    }
-                    changeComand();
-                    
-                    
-                }
-                input.close();
-        }catch(IOException e){
-            System.out.println("Error:"+e.getMessage());
-        }
-    }
-    
-    /*Se busca el comando en el arreglo total*/
-    public int searchCom (String comand){
-        i = 0;
-        x = 0;
-        for (String c : setMne){
-            if(c.equals(comand)){
-                i++;
-            }
-            if(!comand.equals(c) && i != 0)
+        
+        String PC = "", SC = "", comm = "", aux ="", aux2 = "";
+        aux2 = file.getLinea();
+        
+        while ( !file.lineas.isEmpty() && !aux.equals("END")){
+            aux = file.getLinea().toUpperCase();
+            aux2 = aux;
+            aux = this.etiqueta(aux);
+            if ( aux.contains(",") ){
+                comm = aux.substring(0, aux.indexOf(" ")).trim();
+                PC = aux.substring(aux.indexOf(" ")+1, aux.indexOf(",")).trim();
+                SC = aux.substring(aux.indexOf(",")+1).trim();
+            } else if (aux.contains(" ")){
+                comm = aux.substring(0, aux.indexOf(" ")).trim();
+                PC = aux.substring(aux.indexOf(" ")+1).trim();
+            } else {
+                this.agregar(this.NeuNoArgm(aux), aux2);
                 break;
-           x++;
+            }
+            search(comm, PC, SC, aux2); 
         }
-        if (i == 1)
-            return 1;
-        else if (i > 1)
-            return 0;
-        return -1;
+        if (!this.AUXHEX.equals("")){
+            this.HEX.add(":"+this.AUXHEX);
+        }
+        return "LISTO!";
     }
     
-    /*Se transforma a binario*/
-    public void changeArgs(){
-        int flag;
-        if (argument.contains(",")){
-            first = argument.substring(0, argument.indexOf(","));
-            second = argument.substring(argument.indexOf(",")+1).replace(" ", "");
-            flag = searchTables(first);
-            if(flag == -1)
-                System.out.println("Error: Mal argumentos");
-            flag = searchTables(second);
-            if(flag == -1)
-                System.out.println("Error: Mal argumentos");
-        }else{
-            first = argument;
-            flag = searchTables(first);
-            if(flag == -1)
-                System.out.println("Error: Mal argumentos");
-        }
-        
-    }
-    
-    public void changeComand(){
-        i = x -i;
-        
-        String a, b, c, d;
-        System.out.println(table);
-        for (int j = 0; j < table.get(0).size(); j++) {
-            for (int l = i; l < x; l++) {
-                a = (String) setArg.get(l).get(0);
-                b = (String) table.get(0).get(j);
-                if(a.equals(b) && table.size() > 1){
-                    for (int m = 0; m < table.get(1).size(); m++) {                        
-                        for (int n = l; n < x; n++) {
-                            if(b.equals((String) setArg.get(n).get(0))){
-                                c = (String) setArg.get(n).get(1);
-                                d = (String) table.get(1).get(m);
-                                if(c.equals(d)){
-                                    System.out.println("Coincidencia " + n);
-                                    System.out.println(setArg.get(n));
-                                    System.out.println(a + " - " + b + " - " + c + " - " + d);
-                                    ArrayList<String> end = new ArrayList<>();
-                                    end.add(a);
-                                    end.add(c);
-                                    System.out.println(bin.get(n));
-                                    System.out.println(end);
-//                                    archivo(bin.get(n), end);
-                                    n = x-1;
-                                    m = table.get(1).size()-1;
-                                    l = x-1;
-                                    j = table.get(0).size()-1;
-                                }
-                            }else{
-                                n = x-1;
-                            }
-                        }
-                    }
-                }else if (table.size() == 1){
-                    ArrayList<String> end = new ArrayList<>();
-                    end.add(a);
-                    System.out.println(bin.get(l));
-                    System.out.println(end);
-//                archivo(bin.get(n), end);
-                    l = x-1;
-                    j = table.get(0).size()-1;
-                }
-            }
-        }        
-    }
-    
-    /*Se busca en las tablas si existen los registros*/
-    public int searchTables (String argu){
-        String flag = "N"; 
-        brackets = "N";
-        
-        ArrayList<String> args = new ArrayList<>();
-        if(argu.length() == 1){
-            if(argu.equals("A"))
-                args.add("A");
-            
-            Enumeration<String> e = r.keys();
-            while(e.hasMoreElements()){
-                String a = e.nextElement();
-                if (argu.equals(a)){
-                    firstBin = r.get(a);
-                    args.add("r");
-                    flag = "y";
-                    break;
-                }
-            }
-            if( flag.equals("N")){
-                Enumeration<String> z = b.keys();
-                while(e.hasMoreElements()){
-                    String a = z.nextElement();
-                    if(argu.equals(a)){  
-                        firstBin = b.get(a);
-                        args.add("b");
-                        flag = "y";
-                        break;
-                    }
-                }
-            }
-            
-        }else if (argu.length() > 1){
-            
-            if(argu.contains("(")){
-                brackets = "Y";
-                args.add(argu);
-                argu = argu.replace("(", "");
-                argu = argu.replace(")", "");
-            }
-            else if(argu.contains("IX+"))
-                args.add("(IX+d)");
-            else if(argu.contains("IY+"))
-                args.add("(IY+d)");
-            else
-                args.add(argu);
-            Enumeration<String> e = dd.keys();
-            while(e.hasMoreElements()){
-                String a = e.nextElement();
-                if (argu.equals(a)){
-                    firstBin = dd.get(a);
-                    if(brackets.equals("Y"))
-                        args.add("(dd)");
-                    else
-                        args.add("dd");
-                    flag = "y";
-                    break;
-                }
-            }
-            Enumeration<String> z = qq.keys();
-            while(z.hasMoreElements()){
-                String a = z.nextElement();
-                if (argu.equals(a)){
-                    firstBin = qq.get(a);
-                    if(brackets.equals("Y"))
-                        args.add("(qq)");
-                    else
-                        args.add("qq");
-                    flag = "y";
-                    break;
-                }
-            }
-            Enumeration<String> x = rr.keys();
-            while(x.hasMoreElements()){
-                String a = x.nextElement();
-                if (argu.equals(a)){
-                    firstBin = rr.get(a);
-                    if(brackets.equals("Y"))
-                        args.add("(rr)");
-                    else
-                        args.add("rr");
-                    flag = "y";
-                    break;
-                }
-            }
-        }
-        if(flag.equals("N")){
-            Enumeration<String> e = cc.keys();
-            while(e.hasMoreElements()){
-                String a = e.nextElement();
-                    if (argu.equals(a)){
-                        firstBin = cc.get(a);
-                        if(brackets.equals("Y"))
-                        args.add("(cc)");
-                    else
-                        args.add("cc");
-                        flag = "y";
-                        break;
-                    }
-            }
-            if(flag.equals("N")){
-                return -1;
-            }
-              
+    private void search(String s, String PC, String SC, String neu){
+        switch ( s ) {
+            case "LD": agregar (NeuLD(PC,SC), neu); break;
+            case "PUSH": agregar(NeuPUSH(PC), neu); break;
+            case "POP": agregar(NeuPOP(PC), neu); break;
+            case "EX": agregar(NeuEX(PC,SC), neu); break;
+            case "INC": agregar(NeuINC(PC), neu); break;
+            case "DEC": agregar(NeuDEC(PC), neu); break;
+            case "ADD": agregar(NeuADD(PC,SC), neu); break;
+            case "ADC": agregar(NeuADC(PC,SC), neu); break;
+            case "SUB": agregar(NeuSUB(PC,SC), neu); break;
+            case "SBC": agregar(NeuSBC(PC,SC), neu); break;
+            case "AND": agregar(NeuAND(PC,SC), neu); break;
+            case "OR": agregar(NeuOR(PC,SC), neu); break;
+            case "XOR": agregar(NeuXOR(PC,SC), neu); break;
+            case "CP": agregar(NeuCP(PC,SC), neu); break;
+            case "RLC": agregar(NeuRLC(PC), neu); break;
+            case "RL": agregar(NeuRL(PC), neu); break;
+            case "RRC": agregar(NeuRRC(PC), neu); break;
+            case "RR": agregar(NeuRR(PC), neu); break;
+            case "SLA": agregar(NeuSLA(PC), neu); break;
+            case "SRA": agregar(NeuSRA(PC), neu); break;
+            case "SRL": agregar(NeuSRL(PC), neu); break;
+            case "BIT": agregar(NeuBIT(PC,SC), neu); break;
+            case "SET": agregar(NeuSET(PC,SC), neu); break;
+            case "RES": agregar(NeuRES(PC,SC), neu); break;
+            default: agregar ("!", neu);
         }
         
-        table.add(args);
-        return 1;
     }
-    
-    public void init(){
-        dd.put("BC", "00");
-        dd.put("DE", "01");
-        dd.put("HL", "10");
-        dd.put("SP", "11");
-        
-        qq.put("BC", "00");
-        qq.put("DE", "01");
-        qq.put("HL", "10");
-        qq.put("AF", "11");
-        
-        rr.put("BC", "00");
-        rr.put("DE", "01");
-        rr.put("IY", "10");
-        rr.put("SP", "11");
-        
-        r.put("B", "000");
-        r.put("C", "001");
-        r.put("D", "010");
-        r.put("E", "011");
-        r.put("H", "100");
-        r.put("L", "101");
-        r.put("A", "111");
-        
-        b.put("0", "000");
-        b.put("1", "001");
-        b.put("2", "010");
-        b.put("3", "011");
-        b.put("4", "100");
-        b.put("5", "101");
-        b.put("6", "110");
-        b.put("7", "111");
-        
-        cc.put("NZ", "000");
-        cc.put("Z", "001");
-        cc.put("NC", "010");
-        cc.put("C", "011");
-        cc.put("PO", "100");
-        cc.put("PE", "101");
-        cc.put("P", "110");
-        cc.put("M", "111");
-        
-        t.put("000", "00H");
-        t.put("001", "08H");
-        t.put("010", "10H");
-        t.put("011", "18H");
-        t.put("100", "20H");
-        t.put("101", "28H");
-        t.put("110", "30H");
-        t.put("111", "38H");
-        
-    }
-    
-    public String etiqueta (String linea){
+
+    private String etiqueta(String linea) {
         int FinEti = linea.indexOf(":");
-        if ( FinEti != -1 ){
+        if (FinEti != -1) {
             this.ETIQUETAS.put(linea.substring(0, FinEti), this.CL);
             linea = linea.substring(FinEti);
         }
         return linea;
     }
-    
-    public void agregar(String cadena, ArrayList variables){
+
+    private void agregar(String cadena, String neu) {
         String bin = cadena;
-           //AQui transformamos y agregamos a cada archivo.
-        try { 
+        //AQui transformamos y agregamos a cada archivo.
+        try {
+            if ( cadena.length()%8 == 0){
+                
+                long aux1 = Long.parseLong(bin, 2);
+                String aux2 = Long.toHexString(aux1);
+                
+                String h = Long.toHexString(this.CL) + "\t->\t" + Long.toHexString(aux1) + "\t\t->\t\t" + neu;
+                h = h.toUpperCase();
+                
+                this.LST.add(h);
+                
+                this.AUXHEX = this.AUXHEX + aux2;
+                if ( this.AUXHEX.length() >= 42 ){
+                    this.HEX.add(":" + this.AUXHEX.substring(0,42));
+                    this.AUXHEX = this.AUXHEX.substring(42);
+                }
+                
+                this.CL = this.CL + (bin.length() / 8);
+            } else {
+                this.LST.add("ERROR: " + cadena + ":ERROR");
+                this.HEX.add("ERROR: " + cadena + ":ERROR");
+            }
+
+        } catch (Exception e) {
             
-            if ( !variables.isEmpty() ){
-                for (int i = 0; i < bin.length(); i++) {
-                    Character letra = bin.charAt(i);
-                    if( letra != '0' && letra != '1'){
-                        bin = bin.replaceFirst(letra.toString(), (String) variables.remove(0));
-                        i++;
+            this.LST.add(e.getMessage() + "\nERROR: " + cadena + ":ERROR");
+            this.HEX.add("ERROR: " + cadena + ":ERROR");
+        }
+
+    }
+
+    public ArrayList<String> getHEX() {
+        return HEX;
+    }
+
+    public ArrayList<String> getLST() {
+        return LST;
+    }
+
+    private String NUM(String com, int n) {
+        String bin = "";
+        try {
+            if (com.contains("IX") || com.contains("IY")){
+                com = com.substring( com.indexOf("+")+1, com.indexOf(")") );
+            }
+            else if ( com.contains("(") ){
+                com = com.substring( com.indexOf("(")+1, com.indexOf(")") );
+            }
+            
+            int aux = Integer.parseInt(com);
+            bin = Integer.toBinaryString(aux);
+            
+            /*
+            CASOS A TOMAR
+                1: n    / (I#+d     long: 8
+                2: (nn) / nn        long: 16
+            */
+            switch (n){ 
+                case 1:
+                    if ( bin.length() >= 9 ){
+                        bin = "ERROR";
+                    }else{
+                        while ( bin.length() != 8 ){
+                            bin = "0" + bin;
+                        }
+                    }
+                break;
+                case 2:
+                    if ( bin.length() >= 17 ){
+                        bin = "ERROR";
+                    }else{
+                        int i = 0;
+                        while ( bin.length() != 16 ){
+                            bin = "0" + bin;
+                            i++;
+                        }
+                        bin = bin.substring(8) + bin.substring(0,8);
+                    }
+                break;
+            }
+            return bin;
+        } catch (Exception e){
+            return "ERROR";
+        }
+    }
+    
+    /*#####################################*/
+
+    /*   AQUI ESTAN TODOS LOS NUEMONICOS   */
+    
+    /*####################################*/
+    
+    private String NeuLD(String PC, String SC) {
+        switch (PC) {
+            //8 bits
+            case "B": case "C":case "D": case "E":case "H":case "L": {
+                switch (SC) {
+                    case "B":case "C":case "D":case "E":case "H":case "L":case "A": return "01" + VAR.get(PC) + VAR.get(SC);
+                    case "(HL)": return "01" + VAR.get(PC) + "110";
+                    default: {
+                        return (SC.contains("IX") ? "1101110101" + VAR.get(PC) + "110"
+                                : (SC.contains("IY") ? "1111110101" + VAR.get(PC) + "110"
+                                    : "00" + VAR.get(PC) + "110")) + NUM(SC, 1);
+                    }
+                }
+            }
+            case "A": {
+                switch (SC) {
+                    case "B":case "C":case "D":case "E":case "H":case "L": return "01" + VAR.get(PC) + VAR.get(SC);
+                    case "(HL)": return "01" + VAR.get(PC) + "110";
+                    case "(BC)": return "00001010";
+                    case "(DE)": return "00011010";
+                    case "I": return "1110110101010111";
+                    case "R": return "1110110101011111";
+                    default: {
+                        return (SC.contains("IX") ? "1101110101" + VAR.get(PC) + "110" + NUM(SC, 1)
+                                : (SC.contains("IY") ? "1111110101" + VAR.get(PC) + "110" + NUM(SC, 1)
+                                    :(SC.contains("(") ? "00111010" + NUM(SC, 2)
+                                        : "00" + VAR.get(PC) + "110" + NUM(SC, 1))));
                     }
                 }
             }
             
-            if ( !variables.isEmpty() ){
-                int i = 1/0;
+            case "I": return ("A".equals(SC) ? "1110110101000111" : "Error");
+            case "R": return ("A".equals(SC) ? "1110110101001111" : "Error");
+            //16bits
+            case "(BC)": return ("A".equals(SC) ? "00000010" : "Error");
+            case "(DE)": return ("A".equals(SC) ? "00010010" : "Error");
+            case "(HL)": {
+                switch (SC){
+                    case "B":case "C":case "D":case "E":case "H":case "L":case "A": return "01110"+VAR.get(SC);
+                    default: return "00110110"+NUM(SC,2);
+                }
+            } 
+            case "DE":case "BC": 
+                return ( SC.contains("(") ? "1110110101"+VAR.get(PC)+"1011" : "00"+VAR.get(PC)+"0001" ) + NUM(SC,2) ;
+            case "HL":
+                return ( SC.contains("(") ? "00101010" : "00"+VAR.get(PC)+"0001"  ) + NUM(SC,2) ;
+            case "IX":
+                return ( SC.contains("(") ? "1101110100101010" : "1101110100100001" ) + NUM(SC,2) ;
+            case "IY":
+                return ( SC.contains("(") ? "1111110100101010" : "1111110100100001" ) + NUM(SC,2) ;
+            case "SP":
+                switch (SC) {
+                    case "HL": return "11111001";
+                    case "IX": return "1101110111111001";
+                    case "IY": return "1111110111111001";
+                    default:
+                        return ( SC.contains("(") ? "1110110101"+VAR.get(PC)+"1011" : "00"+VAR.get(PC)+"0001" ) + NUM(SC,2) ;
+                }
+            default:
+                switch (SC) {
+                    case "DE":case "BC":case "SP": return "1110110101"+VAR.get(SC)+"0011"+NUM(PC,2);
+                    case "IY": return "00100010"+NUM(PC,2);
+                    case "IX": return "1101110100100010"+NUM(PC,2);
+                    case "HL": return "1111110100100010"+NUM(PC,2);
+                    case "B":case "C":case "D":case "E":case "H":case "L":
+                        return (PC.contains("IX") ? "1101110101110" : (
+                                PC.contains("IY") ? "1111110101110" : "ERROR")) + VAR.get(SC) + NUM(PC, 1);
+                    case "A": 
+                        return (PC.contains("IX") ? "1101110101110111" + NUM(PC,1)
+                                : (PC.contains("IY") ? "1111110101110111" + NUM(PC,1)
+                                    : "00110010" + NUM(PC,2) )) ;
+                    default:
+                        return (PC.contains("IX") ? "1101110100110110" + NUM(PC, 1) + NUM(SC,1)
+                                : (PC.contains("IY") ? "1111110100110110" + NUM(PC, 1) + NUM(SC,1)
+                                    : "ERROR" )) ;
+                }
             }
-            
-            int aux1 = Integer.parseInt(bin, 2);
-            String aux2 = Integer.toHexString(aux1);
-            
-            this.LST = this.LST.concat(Integer.toHexString(this.CL) + "\t\t" + aux2 + "\n");
-            this.HEX = this.HEX.concat(bin + "\n");
-            
-            this.CL = this.CL + ( bin.length() / 8 );
-            
-            
-        } catch ( Exception e ){
-            System.out.println(e.getMessage());
-            this.LST = this.LST.concat("ERROR: " + cadena + ":ERROR");
-            this.HEX = this.HEX.concat("ERROR: " + cadena + ":ERROR");
         }
-        
+    
+    private String NeuPUSH(String PC){
+        switch(PC){
+            case "BC": case "DE": case "HL": case "AF":
+                return "11" + VAR.get(PC) + "0101";
+            case "IX": return "1101110111100101";
+            case "IY": return "1111110111100101";
+        }
+        return "ERROR";
     }
-
-    public String getHEX() {
-        return HEX;
+    
+    private String NeuPOP(String PC){
+        switch(PC){
+            case "BC": case "DE": case "HL": case "AF":
+                return "11" + VAR.get(PC) + "0001";
+            case "IX": return "1101110111100001";
+            case "IY": return "1111110111100001";
+        }
+        return "ERROR";
     }
-
-    public String getLST() {
-        return LST;
+    
+    private String NeuEX(String PC, String SC){
+        switch (PC){
+            case "DE": return ( SC.equals("HL")?"11101011":"ERROR" );
+            case "AF": return ( SC.equals("AF")?"00001000":"ERROR" );
+            case "(SP)": {
+                switch (SC) {
+                    case "HL": return "11100011";
+                    case "IX": return "1101110111100011";
+                    case "IY": return "1111110111100011";
+                    default: return "ERROR";
+                }
+            }
+            default: return "ERROR";
+        }
     }
-        
-        
-
+    
+    private String NeuINC(String PC){
+        return this.AuxNeuINC(PC, "100");
+    }
+    private String NeuDEC(String PC){
+        return this.AuxNeuINC(PC, "101");
+    }
+    private String AuxNeuINC(String PC, String n){
+        switch (PC) {
+            case "B":case "C":case "D":case "E":case "H":case "L":case "A": return "00"+VAR.get(PC)+n;
+            case "BC":case"DE":case"HL":case"SP": return ( n.equals("100")? "00"+VAR.get(PC)+"0011" : "00"+VAR.get(PC)+"1011" ); 
+            case "IX": return "1101110100"+n+"011";
+            case "IY": return "1111110100"+n+"011";
+            case "(HL)": return "00110"+n;
+            default:{
+                return ( PC.contains("IX")? "1101110100110"+n
+                        :PC.contains("IY")?"1111110100110"+n
+                        :"ERROR") + NUM(PC,1);
+            }
+        }
+    }
+    
+    private String NeuADD(String PC, String SC){
+        switch(PC){
+            case "A": return AuxNeuADD(SC, "000");
+            case "HL": {
+                switch (SC){
+                    case "DE":case "BC":case "SP":case "HL": return "00"+VAR.get(SC)+"1001";
+                    default: return "ERROR";
+                }
+            }
+            case "IX": {
+                switch (SC){
+                    case "DE":case "BC":case "SP":case "IX": return "1101110100"+VAR.get(SC)+"1001";
+                    default: return "ERROR";
+                }
+            }
+            case "IY": {
+                switch (SC){
+                    case "DE":case "BC":case "SP":case "IY": return "1111110100"+VAR.get(SC)+"1001";
+                    default: return "ERROR";
+                }
+            }
+            default: return "ERROR";
+        }
+    }
+    private String NeuADC(String PC, String SC){
+        switch(PC){
+            case "A": return AuxNeuADD(SC, "001");
+            case "HL": {
+                switch (SC){
+                    case "DE":case "BC":case "SP":case "HL": return "1110110101"+VAR.get(SC)+"1010";
+                    default: return "ERROR";
+                }
+            }
+            default:  return "ERROR";
+        }
+    }
+    private String NeuSUB(String PC, String SC){
+        if (PC.equals("A")){
+            return AuxNeuADD(SC, "010");
+        }
+        return "ERROR";
+    }
+    private String NeuSBC(String PC, String SC){
+        switch(PC){
+            case "A": return AuxNeuADD(SC, "011");
+            case "HL": {
+                switch (SC){
+                    case "DE":case "BC":case "SP":case "HL": return "1110110101"+VAR.get(SC)+"0010";
+                    default: return "ERROR";
+                }
+            }
+            default:  return "ERROR";
+        }
+    }
+    private String NeuAND(String PC, String SC){
+        if (PC.equals("A")){
+            return AuxNeuADD(SC, "100");
+        }
+        return "ERROR";
+    }
+    private String NeuOR(String PC, String SC){
+        if (PC.equals("A")){
+            return AuxNeuADD(SC, "110");
+        }
+        return "ERROR";
+    }
+    private String NeuXOR(String PC, String SC){
+        if (PC.equals("A")){
+            return AuxNeuADD(SC, "101");
+        }
+        return "ERROR";
+    }
+    private String NeuCP(String PC, String SC){
+        if (PC.equals("A")){
+            return AuxNeuADD(SC, "111");
+        }
+        return "ERROR";
+    }
+    private String AuxNeuADD(String SC, String n){
+        switch(SC){
+            case "B":case "C":case "D":case "E":case "H":case "L":case "A": return "10"+n+VAR.get(SC);
+            case "(HL)": return "10"+n+"110";
+            default: return (SC.contains("IX") ? "1101110110"+n+"110"
+                                : (SC.contains("IY") ? "1111110110"+n+"110"
+                                    : "11"+n+"110" )+NUM(SC,1));
+        }
+    }
+    
+    private String NeuRLC (String PC){
+        return this.AuxNeuRLC(PC, "000");
+    }
+    private String NeuRL (String PC){
+        return this.AuxNeuRLC(PC, "010");
+    }
+    private String NeuRRC (String PC){
+        return this.AuxNeuRLC(PC, "001");
+    }
+    private String NeuRR (String PC){
+        return this.AuxNeuRLC(PC, "011");
+    }
+    private String NeuSLA (String PC){
+        return this.AuxNeuRLC(PC, "100");
+    }
+    private String NeuSRA (String PC){
+        return this.AuxNeuRLC(PC, "101");
+    }
+    private String NeuSRL (String PC){
+        return this.AuxNeuRLC(PC, "111");
+    }
+    private String AuxNeuRLC (String PC, String n){
+        switch(PC){
+            case "B":case "C":case "D":case "E":case "H":case "L":case "A": return "1100101100"+n+VAR.get(PC);
+            case "(HL)": return "1100101100"+n+"110";
+            default: return (PC.contains("IX") ? "1101110111001011"+NUM(PC,1)+"00"+n+"110"
+                                : (PC.contains("IY") ? "1111110111001011"+NUM(PC,1)+"00"+n+"110"
+                                    : "ERROR" ));
+        }
+    }
+    
+    private String NeuBIT (String PC, String SC){
+        return this.AuxNeuBIT(PC, SC, "01");
+    }
+    private String NeuSET (String PC, String SC){
+        return this.AuxNeuBIT(PC, SC, "11");
+    }
+    private String NeuRES (String PC, String SC){
+        return this.AuxNeuBIT(PC, SC, "10");
+    }
+    private String AuxNeuBIT (String PC, String SC, String n){
+        switch(SC){
+            case "B":case "C":case "D":case "E":case "H":case "L":case "A": return "11001011"+n+VAR.get(PC)+VAR.get(SC);
+            case "(HL)": return "11001011"+n+VAR.get(PC)+"110";
+            default: return (SC.contains("IX") ? "1101110111001011"+VAR.get(SC)+n+VAR.get(PC)+"110"
+                                : (SC.contains("IY") ? "1111110111001011"+VAR.get(SC)+n+VAR.get(PC)+"110"
+                                    : "ERROR" ));
+        }
+    }
+    
+    private String NeuRET(String PC){
+        switch(PC){
+            case "NZ":case "Z":case "NC":case "C":case "PO":case "PE":case "P":case "M": return "11"+COD.get(PC)+"000";
+            case "00H":case "08H":case "10H":case "18H":case "20H":case "28H":case "30H":case "38H": return "11"+VAR.get(PC)+"111";
+            default: return "ERROR";
+        }
+    }
+    private String NeuCall(String PC, String SC){
+        switch (PC) {
+            case "NZ":case "Z":case "NC":case "C":case "PO":case "PE":case "P":case "M": return "11"+COD.get(PC)+"100";
+            default: { 
+                return ( SC.equals("") ? ""
+                        : "" );
+            }
+        }
+    }
+    //NEUMONICOS SIN ARGUMENTOS
+    private String NeuNoArgm(String com){
+        switch (com) {
+            case "DAA": return "00100111";
+            case "CPL": return "00101111";
+            case "NEG": return "1110110101000100";
+            case "CCF": return "00111111";
+            case "SCF": return "00110111";
+            case "NOP": return "00000000";
+            case "HALT": return "01110110";
+            case "DI*": return "11110011";
+            case "EI*": return "11111011";
+            case "IM0": return "1110110101000110";
+            case "IM1": return "1110110101010110";
+            case "IM2": return "1110110101011110";
+            case "INI": return "1110110110100010";
+            case "INIR": return "1110110110110010";
+            case "IND": return "1110110110101010";
+            case "INDR": return "1110110110111010";
+            case "OUTI": return "1110110110100011";
+            case "OTIR": return "1110110110101011";
+            case "OUTD": return "1110110110101011";
+            case "OTDR": return "1110110110111011";
+            case "EXX": return "11011001";
+            case "LDI": return "1110110110100000";
+            case "LDIR": return "1110110110110000";
+            case "LDD": return "1110110110101000";
+            case "LDDR": return "1110110110111000";
+            case "CPI": return "1110110110100001";
+            case "CPIR": return "1110110110110001";
+            case "CPD": return "1110110110101001";
+            case "CPDR": return "1110110110111001";
+            case "RLCA": return "00000111";
+            case "RLA": return "00010111";
+            case "RRCA": return "00001111";
+            case "RRA": return "00011111";
+            case "RLD": return "1110110101101111";
+            case "RRD": return "1110110101100111";
+            case "RET": return "11001001";
+            case "RETN": return "1110110101000101";
+            case "RETI": return "1110110101001101";
+            default: return "ERROR";
+        }
+    }
+    
 }
+
+    /*private String NeuLD16(String PC, String SC){
+        switch (PC) {
+            case "DE":case "BC": 
+                return ( SC.contains("(") ? "1110110101"+VAR.get(PC)+"1011" : "00"+VAR.get(PC)+"0001" ) + NUM(SC,2) ;
+            case "HL":
+                return ( SC.contains("(") ? "00101010" : "00"+VAR.get(PC)+"0001"  ) + NUM(SC,2) ;
+            case "IX":
+                return ( SC.contains("(") ? "1101110100101010" : "1101110100100001" ) + NUM(SC,2) ;
+            case "IY":
+                return ( SC.contains("(") ? "1111110100101010" : "1111110100100001" ) + NUM(SC,2) ;
+            case "SP":
+                switch (SC) {
+                    case "HL": return "11111001";
+                    case "IX": return "1101110111111001";
+                    case "IY": return "1111110111111001";
+                    default:
+                        return ( SC.contains("(") ? "1110110101"+VAR.get(PC)+"1011" : "00"+VAR.get(PC)+"0001" ) + NUM(SC,2) ;
+                }
+            default:
+                switch (SC) {
+                    case "DE":case "BC":case "SP": return "1110110101"+VAR.get(SC)+"0011"+NUM(PC,2);
+                    case "IY": return "00100010"+NUM(PC,2);
+                    case "IX": return "1101110100100010"+NUM(PC,2);
+                    case "HL": return "1111110100100010"+NUM(PC,2);
+                }
+        }
+        return "ERROR";
+    }*/

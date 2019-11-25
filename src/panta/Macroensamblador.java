@@ -48,7 +48,6 @@ public class Macroensamblador {
         for (int i=0; i<this.numMacrodefiniciones; i++){
             nom = this.macrodefiniciones.get(i).nombre;
             for (int j=0; j<this.lineas.size(); j++){
-                System.out.println("COM: " + this.lineas.get(j) + " J: " + j);
                 if (lineas.get(j).contains(nom)){
                     ArrayList<String> parametros = obtenerParametros (lineas.get(j),nom);
                     if (parametros == null || parametros.size() != this.macrodefiniciones.get(i).parametros.size()){
@@ -56,7 +55,6 @@ public class Macroensamblador {
                     }
                     personalizada = new Macrodefinicion();
                     personalizada = sustituyeParametros(this.macrodefiniciones.get(i),parametros);
-                    System.out.println(personalizada.lineas.toString() + " J: " + j);
                     lineas.remove(j);
                     sustituye(personalizada, j);
                     
@@ -97,9 +95,7 @@ public class Macroensamblador {
         while( k != macro.lineas.size() ){
             lineas.add(k+numLinea , macro.lineas.get(k));
             k++;
-            System.out.print("  K= " + k);
         }
-        System.out.println(this.lineas.toString());
         
     }
     
@@ -108,8 +104,7 @@ public class Macroensamblador {
             if (this.numMacrodefiniciones != 0){
                 for (int i=0; i<this.numMacrodefiniciones;i++){
                     if (!this.macrodefiniciones.get(i).obtenerAtributos()){
-                        System.out.println("Error: Los parametros de alguna macrodefinición son incorrectos");
-                        break;
+                        return ("Error: Los parametros de alguna macrodefinición son incorrectos");
                     }
                 }
                 for(int i = 0 ; i < this.lineas.size() ; i++){

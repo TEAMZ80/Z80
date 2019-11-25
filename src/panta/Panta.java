@@ -5,8 +5,6 @@
  */
 package panta;
 
-import java.util.ArrayList;
-
 /**
  *
  * @author alacr
@@ -18,10 +16,11 @@ public class Panta {
      */
     public static void main(String[] args) {
         // TODO code application logic here
+        
+        //ESTA ES LA VENTANA, POR SI QUIERES DESCOMENTARLA
         Pantalla ventana = new Pantalla();
         ventana.show();
-       
-        
+
     }
     
 }

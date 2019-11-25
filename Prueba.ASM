@@ -1,0 +1,19 @@
+	CPU:Z80
+PILA = MACRO #v1, #v2
+	PUSH HL
+	LD L, #v1
+	LD H, #v2
+	MEND
+
+	LD IX,3
+	LD IX,50
+	LD IX,100
+	LD IX,1000
+	LD IX,(100)
+
+	LD C, A	
+	LD DE, 50
+	PILA B, C
+	LD A, 5
+	LD E, A
+	PILA D, E

@@ -19,19 +19,22 @@ public class Archivo {
         this.ruta = ruta;
     }
 
-    public boolean Archivo(ArrayList<String> listo) {
-        System.out.println("SE CREO EN: " + ruta + "M");
-        this.lineas = listo;
-        File archivo = new File(ruta + "M");
+    public boolean Archivo(ArrayList<String> listo, String end) {
+        
+        ArrayList <String> salida = new ArrayList <> ();
+        salida = (ArrayList<String>) listo.clone();
+        
+        String nombre = this.ruta.substring(0, this.ruta.length()-4)+end;
+        File archivo = new File(nombre);
         BufferedWriter bw;
         try {
             archivo.createNewFile();
             bw = new BufferedWriter(new FileWriter(archivo));
-            for (String line : listo) {
-                bw.write(line + "\n");
+            while (!listo.isEmpty()) {
+                bw.write(listo.remove(0) + "\n");
             }
             bw.close();
-            
+            lineas.addAll(salida);
             return true;
         } catch ( IOException e ){
             System.out.println("Error al crear el archivo");
@@ -39,7 +42,7 @@ public class Archivo {
         }
     }
 
-    public void leerArchivo() {
+    public boolean leerArchivo() {
         String texto = "";
         try {
             BufferedReader br;
@@ -54,7 +57,7 @@ public class Archivo {
         } catch (IOException ioe) {
             System.out.println("\nError al abrir o guardar archivo");
         }
-
+        return true;
     }
 
     public void obtenerAtributos() {
@@ -69,5 +72,24 @@ public class Archivo {
 
         this.nombre = nombre;
         this.carpeta = carpeta;
+    }
+    
+    public void preparar() {
+        ArrayList<String> emsamblar = new ArrayList<> ();
+        for ( String line : lineas ){
+            //COMENTARIOS
+            if ( line.contains(";")) {
+                line = line.substring(0, line.indexOf(";"));
+            }
+            line = line.trim();
+            line = line.replaceAll("\t", " ");
+            emsamblar.add(line);
+        }
+        lineas.clear();
+        lineas.addAll(emsamblar);
+    }
+    
+    protected String getLinea() {
+        return lineas.remove(0);
     }
 }

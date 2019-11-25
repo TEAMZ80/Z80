@@ -6,6 +6,7 @@
 package panta;
 
 import java.io.File;
+import java.util.ArrayList;
 import javax.swing.JFileChooser;
 
 /**
@@ -20,11 +21,15 @@ public class Pantalla extends javax.swing.JFrame {
     File archivo;
     Archivo files;
     int numAct;
+    boolean mac, hex, lst;
 
     public Pantalla() {
         initComponents();
         this.setLocationRelativeTo(null);
         this.numAct = 0;
+        mac = true;
+        lst = true;
+        hex = true;
     }
 
     /**
@@ -74,7 +79,6 @@ public class Pantalla extends javax.swing.JFrame {
         macro.setBackground(new java.awt.Color(255, 255, 255));
         macro.setSelected(true);
         macro.setText("MACRO");
-        macro.setEnabled(false);
         macro.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 macroItemStateChanged(evt);
@@ -87,12 +91,12 @@ public class Pantalla extends javax.swing.JFrame {
         });
 
         tabladesimbolos.setBackground(new java.awt.Color(255, 255, 255));
+        tabladesimbolos.setSelected(true);
         tabladesimbolos.setText("TABLA DE SIMBOLOS");
-        tabladesimbolos.setEnabled(false);
 
         codigoobjeto.setBackground(new java.awt.Color(255, 255, 255));
+        codigoobjeto.setSelected(true);
         codigoobjeto.setText("CODIGO OBJETO");
-        codigoobjeto.setEnabled(false);
 
         Salida.setForeground(new java.awt.Color(204, 204, 204));
 
@@ -212,17 +216,6 @@ public class Pantalla extends javax.swing.JFrame {
         btnaceptar.enable();
     }//GEN-LAST:event_jButton2ActionPerformed
 
-    private void btnaceptarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnaceptarMouseClicked
-        // TODO add your handling code here:
-        this.Carga.setText("CARGANDO...");
-        files = new Archivo(archivo.getAbsolutePath());
-        files.obtenerAtributos();
-        files.leerArchivo();
-        System.out.println(files.lineas.toString());
-        procesar();
-
-    }//GEN-LAST:event_btnaceptarMouseClicked
-
     private void macroItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_macroItemStateChanged
         // TODO add your handling code here:
         /*if ( this.numAct >= 0 && !this.macro.isSelected()){
@@ -238,32 +231,55 @@ public class Pantalla extends javax.swing.JFrame {
          }*/
     }//GEN-LAST:event_macroItemStateChanged
 
+    private void btnaceptarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnaceptarMouseClicked
+        // TODO add your handling code here:
+        this.Carga.setText("CARGANDO...");
+        procesar();
+    }//GEN-LAST:event_btnaceptarMouseClicked
+  
     void procesar() {
+        
+        files = new Archivo(archivo.getAbsolutePath());
+        files.obtenerAtributos();
+        if ( !files.leerArchivo() ) {
+            this.Carga.setText("ERROR");
+            return;
+        }
         Macroensamblador macro = new Macroensamblador(files.lineas);
         String out = macro.macroensamblar();
-        if ( out == "LISTO!"){
-            this.Carga.setText("GUARDANDO..!");
-            if ( this.files.Archivo(macro.lineas) ){
-                this.Carga.setText("MACRO GUARDADA!");
-                Z80 en = new Z80();
-                
-                //AQUI SE ENSAMBLA Y EN CASO DE QUE NO SE PUEDA YA ESTA EL ERROR
-                
-                if ( false ) {
-                   this.Carga.setText("ERROR AL ENSAMBLAR"); 
+        if (mac){
+            if ( out == "LISTO!"){
+                this.Carga.setText("GUARDANDO..!");
+                if ( this.files.Archivo(macro.lineas, "M.ASM") ){
+                    this.Carga.setText("MACRO GUARDADA!");  
+                }else {
+                    this.Carga.setText("ERROR AL GUARDAR");
                 }
-                
-            }else {
-                this.Carga.setText("ERROR AL GUARDAR");
+            } else {
+                this.Carga.setText(out);
             }
-        } else {
-            this.Carga.setText(out);
+        }
+        files.preparar();
+        Z80 en = new Z80();
+        en.procesar(files);
+        if ( hex ){
+            files.Archivo(en.getHEX(), ".HEX");
+        }
+        if (lst) {
+            files.Archivo(en.getLST(), ".LST");
         }
         
+        
+        //AQUI SE ENSAMBLA Y EN CASO DE QUE NO SE PUEDA YA ESTA EL ERROR
+        
+        
+        if ( false ) {
+            this.Carga.setText("ERROR AL ENSAMBLAR"); 
+        }
         /*for (int i = 0; i < macro.numMacrodefiniciones; i++) {
-            System.out.println(macro.macrodefiniciones.get(i).nombre);
-            System.out.println(macro.macrodefiniciones.get(i).parametros.toString());
-            //System.out.println(macro.macrodefiniciones.get(i).lineas.get(macro.macrodefiniciones.get(i).lineas.size()-1));
+        System.out.println(macro.macrodefiniciones.get(i).nombre);
+        System.out.println(macro.macrodefiniciones.get(i).parametros.toString());
+        //System.out.println(macro.macrodefiniciones.get(i).lineas.get(macro.macrodefiniciones.get(i).lineas.size()-1));
         }*/
 
     }
