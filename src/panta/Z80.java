@@ -1,25 +1,28 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package panta;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
 
-/**
- *
- * @author alacr
- */
 public class Z80 {
 
+    //Contador de localidades
     private Long CL;
-    private ArrayList<String> HEX;
-    private String AUXHEX;
-    private ArrayList<String> LST;
+    
+    //Diccionarios para almacenar todo lo traducido, aunque no este listo
+    private Hashtable<Long, String> HEX;
+    private Hashtable<Long, String> LST;
+    
+    //Almacenan la salida final
+    private ArrayList<String> HEXT;
+    private ArrayList<String> LSTT; 
+    
+    //Almacena las etiquetas con tu direccion
     private Hashtable<String, Long> ETIQUETAS;
-    private ArrayList<Integer> PENDIENTE;
+    
+    //guarda las direecion de los nuemonicos que faltan por procesar
+    private ArrayList<Long> PENDIENTE;
+    
+    //Diccionarios que almacenan los registro, condicionales, etc.
     private Hashtable<String, String> VAR;
     private Hashtable<String, String> COD;
 
@@ -27,14 +30,17 @@ public class Z80 {
         this.ETIQUETAS = new Hashtable<>();
         this.COD = new Hashtable<>();
         this.VAR = new Hashtable <> ();
-        this.HEX = new ArrayList<>();
-        this.LST = new ArrayList<>();
+        this.HEX = new Hashtable<>();
+        this.LST = new Hashtable<>();
         this.PENDIENTE = new ArrayList<>();
+        this.HEXT = new ArrayList<>();
+        this.LSTT = new ArrayList<>();
         this.CL = 0L;
-        this.AUXHEX = "";
+
         inicializar();
     }
     
+    //Inicializa dos diccionarios para almacenar los registros, condicionales, bites, etc.
     private void inicializar(){
         VAR.put( "A" , "111" );
         VAR.put( "L" , "101" );
@@ -76,19 +82,29 @@ public class Z80 {
         VAR.put( "IX" , "10" );
     }
     
+    //Lee un archivo y lo traduce, esta es la primera pasada
     public String procesar (Archivo file) {
         if ( file.lineas.isEmpty() || !file.lineas.get(0).equals("CPU:Z80")  ) {
-            System.out.println("NO PASO :D");
             return "ERROR: ARCHIVO NO VALIDO";
         }
+        
         
         String PC = "", SC = "", comm = "", aux ="", aux2 = "";
         aux2 = file.getLinea();
         
+        if (file.lineas.get(0).toUpperCase().contains("ORG")) {
+            aux2 = file.getLinea().toUpperCase();
+            aux2 = aux2.substring(aux2.indexOf("G")+1);
+            this.CL = Long.parseLong(aux2, 16);
+            
+        }
+        
         while ( !file.lineas.isEmpty() && !aux.equals("END")){
+            PC = ""; SC = ""; comm = ""; 
             aux = file.getLinea().toUpperCase();
             aux2 = aux;
-            aux = this.etiqueta(aux);
+            aux = this.etiqueta(aux).trim();
+            
             if ( aux.contains(",") ){
                 comm = aux.substring(0, aux.indexOf(" ")).trim();
                 PC = aux.substring(aux.indexOf(" ")+1, aux.indexOf(",")).trim();
@@ -98,16 +114,87 @@ public class Z80 {
                 PC = aux.substring(aux.indexOf(" ")+1).trim();
             } else {
                 this.agregar(this.NeuNoArgm(aux), aux2);
-                break;
+                continue;
             }
             search(comm, PC, SC, aux2); 
         }
-        if (!this.AUXHEX.equals("")){
-            this.HEX.add(":"+this.AUXHEX);
-        }
+        finalizar();
         return "LISTO!";
     }
     
+    //Si quedaron etiquetas sin marcar, esta es la segunda passada y guarda toda la informacion procesada
+    private void finalizar(){ 
+        Long aux;
+        String bin, auxS;
+        while (!this.PENDIENTE.isEmpty()){
+            
+            aux = this.PENDIENTE.remove(0);
+            bin = this.LST.get(aux);
+            
+            if ( bin.contains("ETIX") ){
+                auxS = bin.substring(bin.indexOf("X")+1);
+                if ( this.ETIQUETAS.containsKey(auxS)){
+                    bin = bin.substring(0, bin.indexOf("E")) + NUM(Long.toString(ETIQUETAS.get(auxS)),2);
+                }else{
+                    bin = bin.substring(0, bin.indexOf("E"))+NUM(auxS,2);
+                }
+                this.CL = aux;
+                this.agregar(bin, HEX.get(aux));
+                
+            } else if ( bin.contains("ETIZ") ) {
+                auxS = bin.substring(bin.indexOf("Z")+1);
+                Long n = aux + 2 - ETIQUETAS.get(auxS);
+                if (n < 0){
+                    n = n * -1L;
+                }
+                bin = bin.substring(0, bin.indexOf("E")) +  NUM(Long.toString(n),1);
+                this.CL = aux;
+                this.agregar(bin, HEX.get(aux));
+            }
+        }
+        
+        String auxHEX = "";
+        ArrayList<Long> llaves = new ArrayList<> (this.LST.keySet());
+        
+        int casi = llaves.size()-1;
+        String con = "";
+        while ( casi != -1 ){
+            aux = llaves.remove(casi);
+            bin = LST.get(aux);
+            con = Long.toHexString(aux).toUpperCase();
+            auxHEX = auxHEX + bin;
+            while ( con.length()%4 != 0 ){
+                con = "0"+con;
+            }
+            while( bin.length()%8 != 0){
+                bin = bin+ " ";
+            }
+            this.LSTT.add(con + "\t->\t" + bin + "\t\t->\t\t" + this.HEX.remove(aux));
+            
+            if ( auxHEX.length() >= 42 ){
+                this.HEXT.add(":" + auxHEX.substring(0,42));
+                auxHEX = auxHEX.substring(42);
+            }
+            casi--;
+        }
+        this.LSTT.add("\n ------------------------------------------------------- \n");
+        ArrayList<String> llaves2 = new ArrayList<> (this.ETIQUETAS.keySet());
+        for(String s : llaves2){
+            aux = this.ETIQUETAS.get(s);
+            con = Long.toHexString(aux).toUpperCase();
+            while ( con.length()%4 != 0 ){
+                con = "0"+con;
+            }
+            this.LSTT.add(con + "\t->\t" + s);
+        }
+        
+        if ( !auxHEX.equals("") ){
+            this.HEXT.add(":" + auxHEX);
+        }
+
+    }
+    
+    //Busca un neomonico a base de su nombre
     private void search(String s, String PC, String SC, String neu){
         switch ( s ) {
             case "LD": agregar (NeuLD(PC,SC), neu); break;
@@ -134,62 +221,74 @@ public class Z80 {
             case "BIT": agregar(NeuBIT(PC,SC), neu); break;
             case "SET": agregar(NeuSET(PC,SC), neu); break;
             case "RES": agregar(NeuRES(PC,SC), neu); break;
+            case "RET": agregar(NeuRET(PC),neu); break;
+            case "CALL": agregar(NeuCALL(PC,SC),neu); break;
+            case "JP": agregar(NeuJP(PC,SC), neu); break;
+            case "JR": agregar(NeuJR(PC,SC),neu); break;
+            case "DJNZ": agregar(NeuDJNZ(PC),neu); break;
             default: agregar ("!", neu);
         }
         
     }
 
+    //Para almacenar las etiquetas con su direccion
     private String etiqueta(String linea) {
         int FinEti = linea.indexOf(":");
         if (FinEti != -1) {
-            this.ETIQUETAS.put(linea.substring(0, FinEti), this.CL);
-            linea = linea.substring(FinEti);
+            String line  = linea.substring(0, FinEti).toUpperCase();
+            this.ETIQUETAS.put(line, CL);
+            linea = linea.substring(FinEti+1);
         }
         return linea;
     }
 
+    //Agrega (CL, hex) -> LST  y  (CL, neu) -> HEX
     private void agregar(String cadena, String neu) {
         String bin = cadena;
         //AQui transformamos y agregamos a cada archivo.
         try {
-            if ( cadena.length()%8 == 0){
-                
+            if( cadena.contains("ETIX") || cadena.contains("ETIZ")){
+                this.LST.put(this.CL, cadena);
+                this.HEX.put(this.CL, neu);
+                this.PENDIENTE.add(this.CL);
+                CL = CL + (cadena.contains("ETIX") ? 3 : 2);
+            }
+            else if ( cadena.length()%8 == 0){
                 long aux1 = Long.parseLong(bin, 2);
                 String aux2 = Long.toHexString(aux1);
-                
-                String h = Long.toHexString(this.CL) + "\t->\t" + Long.toHexString(aux1) + "\t\t->\t\t" + neu;
-                h = h.toUpperCase();
-                
-                this.LST.add(h);
-                
-                this.AUXHEX = this.AUXHEX + aux2;
-                if ( this.AUXHEX.length() >= 42 ){
-                    this.HEX.add(":" + this.AUXHEX.substring(0,42));
-                    this.AUXHEX = this.AUXHEX.substring(42);
+                aux2 = aux2.toUpperCase();
+                if ( aux2.length()%2 != 0 ){
+                    aux2 = "0"+aux2;
                 }
-                
+                this.LST.put(this.CL, aux2);
+                this.HEX.put(this.CL, neu);
                 this.CL = this.CL + (bin.length() / 8);
+                
             } else {
-                this.LST.add("ERROR: " + cadena + ":ERROR");
-                this.HEX.add("ERROR: " + cadena + ":ERROR");
+                this.CL++;
+                this.LST.put(this.CL,"ERROR: " + cadena + ":ERROR");
+                this.HEX.put(this.CL,"ERROR: " + cadena + ":ERROR");
             }
 
         } catch (Exception e) {
-            
-            this.LST.add(e.getMessage() + "\nERROR: " + cadena + ":ERROR");
-            this.HEX.add("ERROR: " + cadena + ":ERROR");
+            this.CL++;
+            this.LST.put(this.CL, "ERROR: " + cadena + ":ERROR");
+            this.HEX.put(this.CL, "ERROR: " + cadena + ":ERROR");
         }
 
     }
 
+    //Regresa codigo objeto
     public ArrayList<String> getHEX() {
-        return HEX;
+        return HEXT;
     }
 
+    //Regresa la tabla de nuemonicos
     public ArrayList<String> getLST() {
-        return LST;
+        return LSTT;
     }
 
+    //Convierte un String a binario y recibe un parametro que le marca su longuitud 1=8, 2=16
     private String NUM(String com, int n) {
         String bin = "";
         try {
@@ -524,15 +623,45 @@ public class Z80 {
             default: return "ERROR";
         }
     }
-    private String NeuCall(String PC, String SC){
+    private String NeuCALL(String PC, String SC){
         switch (PC) {
-            case "NZ":case "Z":case "NC":case "C":case "PO":case "PE":case "P":case "M": return "11"+COD.get(PC)+"100";
+            case "NZ":case "Z":case "NC":case "C":case "PO":case "PE":case "P":case "M": {
+                return (this.ETIQUETAS.containsKey(PC) ? "11"+COD.get(PC)+"100"+NUM(Long.toString(this.ETIQUETAS.get(SC)),2)
+                    :  "11"+COD.get(PC)+"100ETIX"+SC );
+            }
             default: { 
-                return ( SC.equals("") ? ""
-                        : "" );
+                return (this.ETIQUETAS.containsKey(PC) ? "11001101"+NUM(Long.toString(this.ETIQUETAS.get(SC)),2)
+                    :  "11001101ETIX"+PC );
+                
             }
         }
     }
+    private String NeuJP(String PC, String SC){
+        switch (PC) {
+            case "NZ":case "Z":case "NC":case "C":case "PO":case "PE":case "P":case "M":
+                return  (this.ETIQUETAS.containsKey(SC)?"11"+COD.get(PC)+"010"+NUM(Long.toString(this.ETIQUETAS.get(SC)),2)
+                    :"11"+COD.get(PC)+"010ETIX"+SC);
+            case "(HL)": return "11101001";
+            case "(IX)": return "1101110111101001";
+            case "(IY)": return "1111110111101001";
+            default: return (!SC.equals("")?"ERROR":(
+                    this.ETIQUETAS.containsKey(PC)?"11000011"+NUM(Long.toString(this.ETIQUETAS.get(PC)),2)
+                    :"11000011ETX"+PC));
+        }
+    }
+    private String NeuJR(String PC, String SC){
+        switch (PC) {
+            case "C": return "00111000ETIZ"+SC;
+            case "NC": return "00110000ETIZ"+SC;
+            case "Z": return "00101000ETIZ"+SC;
+            case "NZ": return "00100000ETIZ"+SC;
+            default: return (!SC.equals("")?"ERROR":"00011000ETIZ"+PC);
+        }
+    }
+    private String NeuDJNZ(String PC){
+        return "00010000ETIZ"+PC;
+    }
+    
     //NEUMONICOS SIN ARGUMENTOS
     private String NeuNoArgm(String com){
         switch (com) {
@@ -579,32 +708,3 @@ public class Z80 {
     }
     
 }
-
-    /*private String NeuLD16(String PC, String SC){
-        switch (PC) {
-            case "DE":case "BC": 
-                return ( SC.contains("(") ? "1110110101"+VAR.get(PC)+"1011" : "00"+VAR.get(PC)+"0001" ) + NUM(SC,2) ;
-            case "HL":
-                return ( SC.contains("(") ? "00101010" : "00"+VAR.get(PC)+"0001"  ) + NUM(SC,2) ;
-            case "IX":
-                return ( SC.contains("(") ? "1101110100101010" : "1101110100100001" ) + NUM(SC,2) ;
-            case "IY":
-                return ( SC.contains("(") ? "1111110100101010" : "1111110100100001" ) + NUM(SC,2) ;
-            case "SP":
-                switch (SC) {
-                    case "HL": return "11111001";
-                    case "IX": return "1101110111111001";
-                    case "IY": return "1111110111111001";
-                    default:
-                        return ( SC.contains("(") ? "1110110101"+VAR.get(PC)+"1011" : "00"+VAR.get(PC)+"0001" ) + NUM(SC,2) ;
-                }
-            default:
-                switch (SC) {
-                    case "DE":case "BC":case "SP": return "1110110101"+VAR.get(SC)+"0011"+NUM(PC,2);
-                    case "IY": return "00100010"+NUM(PC,2);
-                    case "IX": return "1101110100100010"+NUM(PC,2);
-                    case "HL": return "1111110100100010"+NUM(PC,2);
-                }
-        }
-        return "ERROR";
-    }*/

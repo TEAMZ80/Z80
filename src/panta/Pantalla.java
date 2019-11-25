@@ -44,6 +44,8 @@ public class Pantalla extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         jFileChooser1 = new javax.swing.JFileChooser();
         jCheckBox1 = new javax.swing.JCheckBox();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jEditorPane1 = new javax.swing.JEditorPane();
         jPanel1 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
@@ -60,6 +62,8 @@ public class Pantalla extends javax.swing.JFrame {
 
         jCheckBox1.setText("jCheckBox1");
 
+        jScrollPane1.setViewportView(jEditorPane1);
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         jPanel1.setBackground(new java.awt.Color(255, 255, 255));
@@ -68,7 +72,7 @@ public class Pantalla extends javax.swing.JFrame {
         jLabel2.setText("MACROENSAMBLADOR");
 
         jLabel3.setFont(new java.awt.Font("Serif", 0, 14)); // NOI18N
-        jLabel3.setText("ARCHIVO");
+        jLabel3.setText("ARCHIVO:");
 
         ruta.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -115,7 +119,9 @@ public class Pantalla extends javax.swing.JFrame {
 
         Salida.setForeground(new java.awt.Color(204, 204, 204));
 
+        Carga.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         Carga.setText("PREPARANDO....");
+        Carga.setToolTipText("");
 
         btnaceptar.setText("OK!");
         btnaceptar.setEnabled(false);
@@ -130,20 +136,23 @@ public class Pantalla extends javax.swing.JFrame {
         SalidaLayout.setHorizontalGroup(
             SalidaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(SalidaLayout.createSequentialGroup()
-                .addGap(26, 26, 26)
                 .addGroup(SalidaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(Carga)
-                    .addComponent(btnaceptar, javax.swing.GroupLayout.PREFERRED_SIZE, 105, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(29, Short.MAX_VALUE))
+                    .addGroup(SalidaLayout.createSequentialGroup()
+                        .addGap(53, 53, 53)
+                        .addComponent(btnaceptar, javax.swing.GroupLayout.PREFERRED_SIZE, 105, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(SalidaLayout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(Carga, javax.swing.GroupLayout.PREFERRED_SIZE, 181, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(22, Short.MAX_VALUE))
         );
         SalidaLayout.setVerticalGroup(
             SalidaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(SalidaLayout.createSequentialGroup()
-                .addGap(23, 23, 23)
-                .addComponent(Carga)
+                .addContainerGap()
+                .addComponent(Carga, javax.swing.GroupLayout.DEFAULT_SIZE, 77, Short.MAX_VALUE)
                 .addGap(18, 18, 18)
                 .addComponent(btnaceptar)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         jButton2.setText("ABRIR");
@@ -159,22 +168,28 @@ public class Pantalla extends javax.swing.JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(36, 36, 36)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel3)
-                    .addComponent(jLabel2)
-                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addGroup(jPanel1Layout.createSequentialGroup()
-                            .addComponent(ruta, javax.swing.GroupLayout.PREFERRED_SIZE, 235, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jButton2))
-                        .addGroup(jPanel1Layout.createSequentialGroup()
-                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(codigoobjeto)
-                                .addComponent(tabladesimbolos)
-                                .addComponent(macro))
-                            .addGap(18, 18, 18)
-                            .addComponent(Salida, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(50, Short.MAX_VALUE))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel3)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(ruta, javax.swing.GroupLayout.PREFERRED_SIZE, 277, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(jButton2))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(codigoobjeto)
+                                    .addComponent(tabladesimbolos)
+                                    .addComponent(macro))
+                                .addGap(18, 18, 18)
+                                .addComponent(Salida, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(48, 48, 48))))
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(70, 70, 70)
+                .addComponent(jLabel2)
+                .addGap(0, 0, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -187,16 +202,19 @@ public class Pantalla extends javax.swing.JFrame {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(ruta, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButton2))
-                .addGap(26, 26, 26)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(26, 26, 26)
                         .addComponent(macro)
                         .addGap(18, 18, 18)
                         .addComponent(tabladesimbolos)
                         .addGap(18, 18, 18)
-                        .addComponent(codigoobjeto))
-                    .addComponent(Salida, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap(31, Short.MAX_VALUE))
+                        .addComponent(codigoobjeto)
+                        .addContainerGap(31, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(Salida, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -248,8 +266,10 @@ public class Pantalla extends javax.swing.JFrame {
 
     private void btnaceptarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnaceptarMouseClicked
         // TODO add your handling code here:
-        this.Carga.setText("CARGANDO...");
-        procesar();
+        if (this.btnaceptar.isEnabled()){
+            this.Carga.setText("CARGANDO...");
+            procesar();
+        }
     }//GEN-LAST:event_btnaceptarMouseClicked
 
     private void macroStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_macroStateChanged
@@ -284,7 +304,7 @@ public class Pantalla extends javax.swing.JFrame {
             if ( out == "LISTO!"){
                 this.Carga.setText("GUARDANDO..!");
                 if ( this.files.Archivo(macro.lineas, "M.ASM") ){
-                    this.Carga.setText("MACRO GUARDADA!");  
+                    this.Carga.setText("GUARDADA!");  
                 }else {
                     this.Carga.setText("ERROR AL GUARDAR");
                 }
@@ -294,17 +314,30 @@ public class Pantalla extends javax.swing.JFrame {
         }
         files.preparar();
         Z80 en = new Z80();
-        en.procesar(files);
-        if ( hex ){
-            files.Archivo(en.getHEX(), ".HEX");
+        boolean ban = false;
+        if (en.procesar(files).equals("LISTO!")){
+            ban = true;
+        }
+        if ( hex && ban){
+            if (files.Archivo(en.getHEX(), ".HEX")){
+                this.Carga.setText("GUARDADA!");
+            } else {
+                this.Carga.setText("ERROR AL GUARDAR");
+            }
+        } else {
+            this.Carga.setText("ERROR AL ENSAMBLAR");
         }
         if (lst) {
-            files.Archivo(en.getLST(), ".LST");
-        }
-        if ( false ) {
-            this.Carga.setText("ERROR AL ENSAMBLAR"); 
+            if(files.Archivo(en.getLST(), ".LST")){
+               this.Carga.setText("GUARDADA!");  
+            }else {
+                this.Carga.setText("ERROR AL GUARDAR");
+            }
+        } else {
+            this.Carga.setText("ERROR AL ENSAMBLAR");
         }
 
+        
     }
     
     public void verificar(){
@@ -357,11 +390,13 @@ public class Pantalla extends javax.swing.JFrame {
     private javax.swing.JCheckBox codigoobjeto;
     private javax.swing.JButton jButton2;
     private javax.swing.JCheckBox jCheckBox1;
+    private javax.swing.JEditorPane jEditorPane1;
     private javax.swing.JFileChooser jFileChooser1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JCheckBox macro;
     private javax.swing.JTextField ruta;
     private javax.swing.JCheckBox tabladesimbolos;

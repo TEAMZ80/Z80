@@ -81,6 +81,9 @@ public class Archivo {
             if ( line.contains(";")) {
                 line = line.substring(0, line.indexOf(";"));
             }
+            if (line.equals("")){
+                continue;
+            }
             line = line.trim();
             line = line.replaceAll("\t", " ");
             emsamblar.add(line);
