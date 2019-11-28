@@ -323,27 +323,32 @@ public class Pantalla extends javax.swing.JFrame {
         if (salida.equals("LISTO!")){
             ban = true;
         }
-        if ( hex && ban){
-            if (files.Archivo(en.getHEX(), ".HEX")){
+        if ( hex){
+            if ( ban ){
+                if (files.Archivo(en.getHEX(), ".HEX")){
                 this.Carga.setText("GUARDADA!");
+                } else {
+                    this.Carga.setText("ERROR AL GUARDAR");
+                }
             } else {
-                this.Carga.setText("ERROR AL GUARDAR");
+                this.Carga.setText("ERROR AL ENSAMBLAR");
             }
-        } else {
-            this.Carga.setText("ERROR AL ENSAMBLAR");
         }
         if (lst) {
-            if(files.Archivo(en.getLST(), ".LST")){
-               this.Carga.setText("GUARDADA!");  
-            }else {
-                this.Carga.setText("ERROR AL GUARDAR");
+            if ( ban ) {
+                if(files.Archivo(en.getLST(), ".LST")){
+                    this.Carga.setText("GUARDADA!");  
+                }else {
+                    this.Carga.setText("ERROR AL GUARDAR");
+                }
+            } else {
+                this.Carga.setText("ERROR AL ENSAMBLAR");
             }
-        } else {
-            this.Carga.setText("ERROR AL ENSAMBLAR");
-        }
+        } 
 
         this.ruta.setText("");
         this.btnaceptar.setEnabled(false);
+        this.Carga.setText("PREPARANDO....");
     }
     
     public void verificar(){

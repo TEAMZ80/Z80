@@ -50,6 +50,7 @@ public class Macroensamblador {
     }
 
     public boolean buscaMacrodefincionesAnidadas(){
+        int anidadas=0;
             for (int i = 0; i<this.numMacrodefiniciones;i++){
                 for (int j = 0; j < this.macrodefiniciones.get(i).lineas.size(); j++){
                     if (this.macrodefiniciones.get(i).lineas.get(j).contains("MACRO")){
@@ -63,15 +64,21 @@ public class Macroensamblador {
                
                         while (j < this.macrodefiniciones.get(i).lineas.size() && !this.macrodefiniciones.get(i).lineas.get(j).contains("MEND")){
                             this.macrodefiniciones.get(this.numMacrodefiniciones-1).lineas.add(this.macrodefiniciones.get(i).lineas.get(j));
-                            this.macrodefiniciones.get(i).lineas.set(j, "");
+                            //this.macrodefiniciones.get(i).lineas.set(j, "");
                             j++;
                         }
-
+                        if (macrodefiniciones.get(i).lineas.get(j).contains("MACRO")){
+                            anidadas++;
+                        }
+                        if (macrodefiniciones.get(i).lineas.get(j).contains("MEND") && anidadas == 0){
+                            macrodefiniciones.get(i).lineas.set(j,"");
+                            break;
+                        }
+                        if (macrodefiniciones.get(i).lineas.get(j).contains("MEND") && anidadas != 0){
+                            anidadas--;
+                        }
                         if (j == macrodefiniciones.get(i).lineas.size()){
                             return true;
-                        }
-                        if (macrodefiniciones.get(i).lineas.get(j).contains("MEND")){
-                            macrodefiniciones.get(i).lineas.set(j,"");
                         }
                     }
                 }
@@ -179,6 +186,10 @@ public class Macroensamblador {
                                 this.lineas.remove(i);
                                 i--;
                             }
+                        }
+                        
+                        for(int i = 0 ; i < this.lineas.size() ; i++){
+                            this.lineas.set(i,this.lineas.get(i).trim());
                         }
                         return "LISTO!";
 

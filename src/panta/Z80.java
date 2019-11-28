@@ -91,14 +91,14 @@ public class Z80 {
         
         
         String PC = "", SC = "", comm = "", aux ="", aux2 = "";
-        aux2 = file.getLinea();
+        //aux2 = file.getLinea();
         
-        if (file.lineas.get(0).toUpperCase().contains("ORG")) {
+        /*if (file.lineas.get(0).toUpperCase().contains("ORG")) {
             aux2 = file.getLinea().toUpperCase();
             aux2 = aux2.substring(aux2.indexOf("G")+1).trim();
             this.CL = Long.parseLong(aux2, 16);
             
-        }
+        }*/
         
         while ( !file.lineas.isEmpty() && !aux.equals("END")){
             PC = ""; SC = ""; comm = ""; 
@@ -121,6 +121,64 @@ public class Z80 {
         }
         finalizar();
         return "LISTO!";
+    }
+    
+    private String intel16(String hex, int sobra){
+        String out;
+        if ( hex.equals("END") ){
+            return  ":00000001FF";
+        } else if ( hex.length() != 32 ){
+            this.CL = this.CL + hex.length()/2;
+        }
+        if ( sobra != 0 ){
+            this.CL = this.CL - sobra/2;
+        }
+        
+        int tam = hex.length() / 2;
+        String aux = "" + Integer.toHexString(tam);
+        while ( aux.length() <= 1 ){
+            aux = "0" + aux;
+        }
+        out = aux;
+            
+        aux = this.CL + "";
+        tam  = Integer.parseInt(aux) - tam;
+        aux  = Integer.toHexString( tam );
+        while ( aux.length() <= 3 ){
+            aux = "0" + aux;
+        }
+        out =  out + aux + "00" + hex;
+        
+        out = out + compleA2(out);
+        
+        return ":" + out.toUpperCase();
+    }
+    
+    //Funcion encargada de obtener el complemento A2
+    public String compleA2(String hex){
+        int aux = 0, acum = 0 ;
+        String sum;
+        System.out.println("HEXR: " + hex);
+        do{
+            sum = hex.substring(aux, aux+2);
+            System.out.println("SUMANDO: " + sum + "  IGUAL: " + Integer.parseInt(sum, 16));
+            acum = acum + Integer.parseInt(sum, 16);
+            aux = aux + 2;
+        }while(aux <= hex.length()-2);
+        
+        System.out.println("SUMAIF: " + acum);
+        if ( acum >= 256 ){
+            sum = Integer.toHexString(acum).trim();
+            sum =  sum.substring( sum.length()-2 );
+            acum = Integer.parseInt(sum, 16);
+        }
+        System.out.println("SUMA: " + acum);
+        aux = 256 - acum;
+        sum = Integer.toHexString(aux);
+        if ( sum.length() == 1 ){
+            sum = "0"+sum;
+        }
+        return sum;
     }
     
     //Si quedaron etiquetas sin marcar, esta es la segunda passada y guarda toda la informacion procesada
@@ -157,6 +215,7 @@ public class Z80 {
         String auxHEX = "";
         String con = "";
         Long casi = 0L;
+        this.CL = 0L;
         
         while ( !LST.isEmpty() ){
             if ( !LST.containsKey(casi) ){
@@ -165,6 +224,7 @@ public class Z80 {
             }
             bin = LST.remove(casi);
             con = Long.toHexString(casi).toUpperCase();
+            this.CL = casi + bin.length()/2;
             auxHEX = auxHEX + bin;
             while ( con.length()%4 != 0 ){
                 con = "0"+con;
@@ -174,9 +234,10 @@ public class Z80 {
             }
             this.LSTT.add(con + "\t->\t" + bin + "\t\t->\t\t" + this.HEX.remove(casi));
             
-            if ( auxHEX.length() >= 42 ){
-                this.HEXT.add(":" + auxHEX.substring(0,42));
-                auxHEX = auxHEX.substring(42);
+            if ( auxHEX.length() >= 32 ){
+                int n = auxHEX.length() - 32;
+                this.HEXT.add( this.intel16( auxHEX.substring(0,32) , n ));
+                auxHEX = auxHEX.substring(32);
             }
             casi++;
         }
@@ -192,11 +253,10 @@ public class Z80 {
         }
         
         if ( !auxHEX.equals("") ){
-            this.HEXT.add(":" + auxHEX);
+            this.HEXT.add( this.intel16( auxHEX , auxHEX.length() ));
         }
-
+        this.HEXT.add( this.intel16("END" , 0 ));
     }
-    
     //Busca un neomonico a base de su nombre
     private void search(String s, String PC, String SC, String neu){
         switch ( s ) {
